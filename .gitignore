@@ -1,0 +1,11 @@
+.project
+.settings/
+.pydevproject
+
+*.pyc
+*~
+
+*.back
+
+conf/*.conf
+
