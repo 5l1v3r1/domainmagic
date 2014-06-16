@@ -1,8 +1,9 @@
 Library for all sorts of domain lookup related tasks
 
+ - geoIP
  - parallel dns lookups
  - mini cache (a few seconds)
- 
+  
  - rbl lookups (domain,a,nsname,nsip,...)
  
  - uri extractor
