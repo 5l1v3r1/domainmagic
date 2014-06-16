@@ -5,6 +5,7 @@ import os
 import tempfile
 import urllib2
 import thread
+import zlib
 
 class FileTooSmallException(Exception):
     pass
@@ -21,15 +22,16 @@ class FileUpdater(object):
         # - lock (threading.Lock object, created by add_file)
         self.defaults={
          'refresh_time':86400,
-         'minimum_size':0,               
+         'minimum_size':0,        
         }
         self.filedict={}
         self.logger=logging.getLogger('fileupdater')
     
-    def add_file(self,local_path,update_url,refresh_time=None,minimum_size=None):
+    def add_file(self,local_path,update_url,refresh_time=None,minimum_size=None,unpack=False):
         valdict=dict()
         valdict['refresh_time']=refresh_time or self.defaults['refresh_time']
         valdict['minimum_size']=minimum_size or self.defaults['minimum_size']
+        valdict['unpack']=unpack
         valdict['lock']=threading.Lock()
         valdict['update_url']=update_url
         
@@ -74,13 +76,25 @@ class FileUpdater(object):
             response = urllib2.urlopen(update_url)
             content = response.read()
             content_len=len(content)
-            self.logger.error("%s bytes downloaded from %s"%(content_len,update_url))
+            self.logger.debug("%s bytes downloaded from %s"%(content_len,update_url))
             handle,tmpfilename=tempfile.mkstemp()
             if len(content)<self.filedict[local_path]['minimum_size']:
-                raise FileTooSmallException("file size %s downloaded from %s is smaller than configured minimum of %s bytes"%(content_len, update_url,self.filedict[local_path]['minimum_size']))
+                raise FileTooSmallException("file size %s downloaded from %s is smaller than configured minimum of %s bytes"%(content_len, update_url,self.filedict[local_path]['minimum_size']))                
+
+
+            #TODO: add zip etc here
+            #http://stackoverflow.com/questions/3122145/zlib-error-error-3-while-decompressing-incorrect-header-check
+            if self.filedict[local_path]['unpack']==True:
+                if update_url.lower().endswith('.gz'): #TODO: we'd probably have to really parse the update url, this would fail with url arguments atm
+                    content=zlib.decompress(content,zlib.MAX_WBITS | 16)
+            
             fd=os.fdopen(handle,'w')
             fd.write(content)
             fd.close()
+            
+    
+            
+            
             os.rename(tmpfilename, local_path)
             
         finally:

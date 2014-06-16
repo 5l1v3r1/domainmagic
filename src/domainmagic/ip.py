@@ -1,6 +1,14 @@
 """ip tools"""
 
 from domainmagic.validators import is_ipv4,is_ipv6
+from domainmagic import updatefile
+
+try:
+    import pygeoip
+    PYGEOIP_AVAILABLE=True
+except ImportError:
+    PYGEOIP_AVAILABLE=False
+    
 
 def ip6_expand(ip):
     """remove :: shortcuts from ip adress - the returned address has 8 parts"""
@@ -46,4 +54,12 @@ def ip_reversed(ip):
         return '.'.join(parts)
     
     raise ValueError("invalid ip address: %s"%ip)
-    
+
+@updatefile('/tmp/GeoIP.dat','http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz',refresh_time=24*3600,minimum_size=1000,unpack=True)
+def geoip_country_code_by_addr(ip):
+    assert PYGEOIP_AVAILABLE,"pygeoip is not installed"
+    gi = pygeoip.GeoIP('/tmp/GeoIP.dat')
+    retval = gi.country_code_by_addr(ip)
+    return retval
+
+

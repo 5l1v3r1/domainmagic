@@ -1,4 +1,7 @@
+import sys
+sys.path.insert(0,'src')
 from distutils.core import setup
+from domainmagic import CACHEDIR
 import glob
 
 
@@ -13,6 +16,5 @@ setup(name = "domainmagic",
     long_description = """Python library for all sorts of domain lookup related tuff (rbl lookups, extractors etc)""" ,
     data_files=[
                ('/etc/domainmagic',glob.glob('conf/*.dist')),
-               ('/var/lib/domainmagic/builtin',glob.glob('builtin/*')),
     ]
 ) 
