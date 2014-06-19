@@ -4,8 +4,12 @@ import Queue
 import logging
 
 class Task(object):
+    """Default task object used by the threadpool
+    optional callback will be called with this task object as argument after the task has executed
+    """
     def __init__(self,method,args=None,kwargs=None,callback=None):
         self.method=method
+        
         if args!=None:
             self.args=args
         else:
@@ -15,9 +19,16 @@ class Task(object):
             self.kwargs=kwargs
         else:
             self.kwargs={}
-        self.callback=callback        
+        
+        self.callback=callback
+        """callback to execute after this task is done"""
+                
         self.done=False
+        """will be set to true after the task has been executed"""
+        
         self.result=None
+        """contains the result of the method call after the task has been executed"""
+        
         
         
     def execute(self,worker):
@@ -29,13 +40,22 @@ class Task(object):
             
             
 class TaskGroup(object):
+    """Similar to Task, but can be used to run multiple methods in parallel
+    progresscallback will be called after each task execution with this taskgroup and the task as argument
+    completecallback will be called when all task in the taskgroup have been executed
+    """
+    
     def __init__(self,progresscallback=None,completecallback=None):
         self.tasks=[]
         self.progresscallback=progresscallback
         self.completecallback=completecallback
         
     def add_task(self,method,args=None,kwargs=None):
-        """add a method call to the task group. and return the task object."""
+        """add a method call to the task group. and return the task object.
+        the resulting task object should *not* be modified by the caller (especially it should not overwrite the callback)
+        and should not be added to a threadpool again, this will be done automatically when the taskgroup is added to the threadpool
+        callbacks should be set on the taskgroup itself instead
+        """
         t=Task(method,args=args,kwargs=kwargs,callback=self._task_done)
         self.tasks.append(t)
         return t
@@ -52,6 +72,7 @@ class TaskGroup(object):
             self.completecallback(self)
         
     def execute(self,worker):
+        """add all tasks to the thread pool"""
         for task in self.tasks:
             worker.pool.add_task(task)      
         
@@ -59,13 +80,15 @@ class TaskGroup(object):
 class ThreadPool(threading.Thread):
     
     def __init__(self,minthreads=1,maxthreads=None,queuesize=100):
+        """Initialize and start the threadpool. if maxthreads is None a default of minthreads+20 will be used"""
+        
         self.workers=[]
         self.queuesize=queuesize
         self.tasks=Queue.Queue(queuesize)
         self.minthreads=minthreads
         
         if maxthreads==None:
-            maxthreads=9999
+            maxthreads=minthreads+20
         
         self.maxthreads=maxthreads
         assert self.minthreads>0
@@ -84,9 +107,13 @@ class ThreadPool(threading.Thread):
         
 
     def add_task(self,task):
+        """Add task or taskgroup to the queue. You may also add custom task objects, as long as they have a .execute(worker) method
+        this will block if the queue is full
+        """
         self.tasks.put(task)
     
     def get_task(self):
+        """get the next task from the queue. returns None if there is no task at the moment"""
         try:
             task=self.tasks.get(True, 1)
             return task
@@ -162,6 +189,9 @@ class ThreadPool(threading.Thread):
             worker=Worker("[%s]"%self.threadcounter,self)
             self.workers.append(worker)
             worker.start()
+            
+    def shutdown(self):
+        self.stayalive=False
     
 
 class Worker(threading.Thread):
