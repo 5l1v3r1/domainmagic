@@ -39,19 +39,42 @@ def _make_results(question,qtype,resolveranswer):
 
 
 class DNSLookup(object):
-    def __init__(self):
-        self.resolver=resolver.Resolver()
-        self.threadpool=ThreadPool(10)
-        
+    threadpool=ThreadPool(10)
     
+    def __init__(self):    
+        self.nameservers=None
+        #override here
+        self.nameservers=['91.208.173.38',]
+        
+        #TODO: timeout/override ns doesn't seem to work yet
+        
+        self.timeout=3
+        
+        self.resolver=resolver.Resolver()
+        
+        self.logger=logging.getLogger("dnslookup")
+        
     def lookup(self,question,qtype='A'):
         """lookup one record returns a list of DNSLookupResult"""
-        resolveranswer = self.resolver.query(question, qtype)
-        results=_make_results(question,qtype,resolveranswer)
-        return results
+        resolveranswer=None
+        try:
+            resolveranswer = self.resolver.query(question, qtype)
+        except resolver.NXDOMAIN:
+            pass
+        except Exception,e:
+            self.logger.warning("dnslookup %s/%s failed: %s"%(question,qtype,str(e)))
+            
+        if resolveranswer!=None:
+            results=_make_results(question,qtype,resolveranswer)
+            return results
+        else:
+            return []
+        
     
     def lookup_multi(self,questions, qtype='A'):
-        """lookup a list of multiple records of the same qtype. the lookups will be done in parallel"""
+        """lookup a list of multiple records of the same qtype. the lookups will be done in parallel
+        returns a dict question->[list of DNSLookupResult]
+        """
         
         global result
         result=None
@@ -72,7 +95,9 @@ class DNSLookup(object):
         
         while result==None:
             pass
-            
+        
+        #print "lookup multi, questions=%s, qtype=%s , result=%s"%(questions,qtype,result)
+        
         return result
         
         
