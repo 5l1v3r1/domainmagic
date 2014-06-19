@@ -82,6 +82,8 @@ class ThreadPool(threading.Thread):
     def __init__(self,minthreads=1,maxthreads=None,queuesize=100):
         """Initialize and start the threadpool. if maxthreads is None a default of minthreads+20 will be used"""
         
+        self.mainthread=threading.current_thread()
+        
         self.workers=[]
         self.queuesize=queuesize
         self.tasks=Queue.Queue(queuesize)
@@ -96,7 +98,7 @@ class ThreadPool(threading.Thread):
         
         self.logger=logging.getLogger('threadpool')
         self.threadlistlock=threading.Lock()
-        self.checkinterval=10
+        self.checkinterval=3
         self.threadcounter=0
         self.stayalive=True
         self.laststats=0
@@ -166,8 +168,13 @@ class ThreadPool(threading.Thread):
                 workerlist="\n%s"%'\n'.join(map(repr,self.workers))
                 self.logger.debug('queuesize=%s workload=%.2f workers=%s workerlist=%s'%(queuesize,workload,numthreads,workerlist))
                 self.laststats=time.time()
-                
+            
             time.sleep(self.checkinterval)
+            #if main thread exits we shutdown too
+            if not self.mainthread.is_alive():
+                self.logger.debug("Main thread shut down -> shutting down threadpool")
+                self.stayalive=False
+            
         for worker in self.workers:
             worker.stayalive=False
         del self.workers
