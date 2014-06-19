@@ -20,21 +20,53 @@ class Task(object):
         self.result=None
         
         
-    def execute(self):
+    def execute(self,worker):
         self.result=self.method(*self.args,**self.kwargs)
         self.done=True
         
         if self.callback!=None:
             self.callback(self)
             
-
+            
+class TaskGroup(object):
+    def __init__(self,progresscallback=None,completecallback=None):
+        self.tasks=[]
+        self.progresscallback=progresscallback
+        self.completecallback=completecallback
+        
+    def add_task(self,method,args=None,kwargs=None):
+        """add a method call to the task group. and return the task object."""
+        t=Task(method,args=args,kwargs=kwargs,callback=self._task_done)
+        self.tasks.append(t)
+        return t
+    
+    def _task_done(self,task):
+        if self.progresscallback!=None:
+            self.progresscallback(self,task)
+        
+        if self.completecallback!=None:
+            for task in self.tasks:
+                if not task.done:
+                    return
+            self.done=True
+            self.completecallback(self)
+        
+    def execute(self,worker):
+        for task in self.tasks:
+            worker.pool.add_task(task)      
+        
+        
 class ThreadPool(threading.Thread):
     
-    def __init__(self,minthreads=1,maxthreads=20,queuesize=100):
+    def __init__(self,minthreads=1,maxthreads=None,queuesize=100):
         self.workers=[]
         self.queuesize=queuesize
         self.tasks=Queue.Queue(queuesize)
         self.minthreads=minthreads
+        
+        if maxthreads==None:
+            maxthreads=9999
+        
         self.maxthreads=maxthreads
         assert self.minthreads>0
         assert self.maxthreads>self.minthreads
@@ -51,13 +83,13 @@ class ThreadPool(threading.Thread):
         self.start()
         
 
-    def add_task(self,session):
-        self.tasks.put(session)
+    def add_task(self,task):
+        self.tasks.put(task)
     
     def get_task(self):
         try:
-            session=self.tasks.get(True, 5)
-            return session
+            task=self.tasks.get(True, 1)
+            return task
         except Queue.Empty:
             return None
         
@@ -156,7 +188,7 @@ class Worker(threading.Thread):
             if task==None:
                 continue
             try:
-                task.execute()
+                task.execute(self)
             except Exception,e:
                 self.logger.error('Unhandled Exception : %s'%e)
             self.threadinfo='task completed'
@@ -174,15 +206,25 @@ if __name__=='__main__':
         time.sleep(rand)
         return rand
     
-    def printresult(task):
+    def progress(taskgroup,task):
         print "Task got result : %s"%(task.result)
-        
     
-    t=ThreadPool()
+    def complete(taskgroup):
+        print "Taskgroup complete"    
+    
+    t=ThreadPool(50)
+    
+    
+    #for i in range(0,50):
+    #    print "adding task %s"%i
+    #    t.add_task(Task(dummy,callback=printresult))
+    #print "done adding tasks"
+    
+    tg=TaskGroup(progress, complete)
     for i in range(0,50):
-        print "adding task %s"%i
-        t.add_task(Task(dummy,callback=printresult))
-    print "done adding tasks"
+        tg.add_task(dummy)
+    print "taskgroup created"
+    t.add_task(tg)
     
     try:
         raw_input()
