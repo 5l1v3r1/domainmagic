@@ -2,6 +2,7 @@ import threading
 import time
 import Queue
 import logging
+import traceback
 
 class Task(object):
     """Default task object used by the threadpool
@@ -225,8 +226,9 @@ class Worker(threading.Thread):
                 continue
             try:
                 task.execute(self)
-            except Exception,e:
-                self.logger.error('Unhandled Exception : %s'%e)
+            except Exception:
+                self.logger.error('Unhandled Exception in workertask %s'%str(self))
+                self.logger.error(traceback.format_exc())
             self.threadinfo='task completed'
         
         self.threadinfo='ending'
