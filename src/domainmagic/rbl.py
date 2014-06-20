@@ -79,6 +79,8 @@ class RBLProviderBase(object):
         for lookup,arecordlist in multidnsresult.iteritems():
             if lookup not in lookup_to_trans:
                 self.logger.error("dns error: I asked for %s but got '%s' ?!"%(lookup_to_trans.keys(),lookup))
+                continue
+            
             for ipresult in arecordlist:
                 listings.extend(self._listed_identifiers(input,lookup_to_trans[lookup],ipresult.content))
 
@@ -242,33 +244,21 @@ class RBLLookup(object):
         self.providers=providers
         self.logger.debug("Providerlist from configfile: %s"%providers)
     
-    def lookup(self,query,abort_on_first_hit=False):
-        global listed,complete
+    def lookup(self,query):
         listed={}
-        complete=False
         
-        def _progress(taskgroup,worker):
-            global listed,complete
-            for identifier,humanreadable in worker.result:
-                print identifier
-                listed[identifier]=humanreadable
-            if abort_on_first_hit:
-                complete=True
         
-        def _complete(taskgroup):
-            global complete
-            complete=True
-        
-        tg=TaskGroup(progresscallback=_progress, completecallback=_complete)
+        tg=TaskGroup()
         for provider in self.providers:
             tg.add_task(provider.listed, (query,), )
-        
         get_default_threadpool().add_task(tg)
+        tg.join(10)
 
-        while not complete:
-            pass
+        for task in tg.tasks:
+            if task.done:
+                for identifier,humanreadable in task.result:
+                    listed[identifier]=humanreadable
         
-        #copy here, because "late arrivals" might cause the dict to get updated and cause a runtime error
         return listed.copy()
 
 

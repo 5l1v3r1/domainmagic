@@ -6,9 +6,8 @@ import traceback
 
 class Task(object):
     """Default task object used by the threadpool
-    optional callback will be called with this task object as argument after the task has executed
     """
-    def __init__(self,method,args=None,kwargs=None,callback=None):
+    def __init__(self,method,args=None,kwargs=None):
         self.method=method
         
         if args!=None:
@@ -20,9 +19,6 @@ class Task(object):
             self.kwargs=kwargs
         else:
             self.kwargs={}
-        
-        self.callback=callback
-        """callback to execute after this task is done"""
                 
         self.done=False
         """will be set to true after the task has been executed"""
@@ -30,55 +26,54 @@ class Task(object):
         self.result=None
         """contains the result of the method call after the task has been executed"""
         
-        
-        
     def execute(self,worker):
         self.result=self.method(*self.args,**self.kwargs)
         self.done=True
-        
-        if self.callback!=None:
-            self.callback(self)
-            
+
     def __repr__(self):
         return "<Task method='%s' args='%s' kwargs='%s' done=%s >"%(self.method,self.args,self.kwargs, self.done)
         
-            
+class TimeOut(Exception):
+    pass
+      
 class TaskGroup(object):
     """Similar to Task, but can be used to run multiple methods in parallel
-    progresscallback will be called after each task execution with this taskgroup and the task as argument
-    completecallback will be called when all task in the taskgroup have been executed
     """
     
-    def __init__(self,progresscallback=None,completecallback=None):
+    def __init__(self):
         self.tasks=[]
-        self.progresscallback=progresscallback
-        self.completecallback=completecallback
         
     def add_task(self,method,args=None,kwargs=None):
         """add a method call to the task group. and return the task object.
-        the resulting task object should *not* be modified by the caller (especially it should not overwrite the callback)
+        the resulting task object should *not* be modified by the caller
         and should not be added to a threadpool again, this will be done automatically when the taskgroup is added to the threadpool
-        callbacks should be set on the taskgroup itself instead
         """
-        t=Task(method,args=args,kwargs=kwargs,callback=self._task_done)
+        t=Task(method,args=args,kwargs=kwargs)
         self.tasks.append(t)
         return t
-    
-    def _task_done(self,task):
-        if self.progresscallback!=None:
-            self.progresscallback(self,task)
-        
-        if self.completecallback!=None:
-            for task in self.tasks:
-                if not task.done:
-                    return
-            self.done=True
-            self.completecallback(self)
         
     def execute(self,worker):
         """add all tasks to the thread pool"""
         for task in self.tasks:
-            worker.pool.add_task(task)      
+            worker.pool.add_task(task)
+    
+    def join(self,timeout=None):
+        """block until all tasks in this group are done"""
+        starttime=time.time()
+        while True:
+            if timeout!=None:
+                if time.time()-starttime>timeout:
+                    raise TimeOut()
+                    
+            if self.all_done():
+                return
+            
+    
+    def all_done(self):
+        for task in self.tasks:
+            if not task.done:
+                return False
+        return True
         
 global default_threadpool
 default_threadpool=None
@@ -86,7 +81,7 @@ default_threadpool=None
 def get_default_threadpool():
     global default_threadpool
     if default_threadpool==None:
-        default_threadpool=ThreadPool(minthreads=50,maxthreads=500,queuesize=100)
+        default_threadpool=ThreadPool(minthreads=100,maxthreads=500,queuesize=100)
     return default_threadpool
 
 
@@ -247,41 +242,4 @@ class Worker(threading.Thread):
         
         self.threadinfo='ending'
 
-        
-
-if __name__=='__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    
-    def dummy():
-        import random
-        rand=random.randint(1,10)
-        time.sleep(rand)
-        return rand
-    
-    def progress(taskgroup,task):
-        print "Task got result : %s"%(task.result)
-    
-    def complete(taskgroup):
-        print "Taskgroup complete"    
-    
-    t=ThreadPool(50)
-    
-    
-    #for i in range(0,50):
-    #    print "adding task %s"%i
-    #    t.add_task(Task(dummy,callback=printresult))
-    #print "done adding tasks"
-    
-    tg=TaskGroup(progress, complete)
-    for i in range(0,50):
-        tg.add_task(dummy)
-    print "taskgroup created"
-    t.add_task(tg)
-    
-    try:
-        raw_input()
-    except:
-        pass
-    
-    t.stayalive=False
         

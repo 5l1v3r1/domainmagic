@@ -3,7 +3,7 @@ import threading
 from dns import resolver
 from dns.rdatatype import to_text as rdatatype_to_text
  
-from tasker import get_default_threadpool,Task,TaskGroup
+from tasker import get_default_threadpool,Task,TaskGroup,TimeOut
 import time
 import logging
 
@@ -44,7 +44,7 @@ def _make_results(question,qtype,resolveranswer):
 class DNSLookup(object):
     threadpool=get_default_threadpool()
     
-    MAX_PARALLEL_REQUESTS=10
+    MAX_PARALLEL_REQUESTS=100
     
     semaphore=threading.Semaphore(MAX_PARALLEL_REQUESTS)
     
@@ -100,41 +100,28 @@ class DNSLookup(object):
         """lookup a list of multiple records of the same qtype. the lookups will be done in parallel
         returns a dict question->[list of DNSLookupResult]
         """
+
         
-        global result
-        result=None
-        def _waitforresult(taskgroup):
-            global result
-            tempresult={}
-            for task in taskgroup.tasks:
-                assert task.done
-                tempresult[task.args[0]]=task.result
-            result=tempresult
-            
-        
-        tg=TaskGroup(completecallback=_waitforresult)
+        tg=TaskGroup()
         for question in questions:
             tg.add_task(self.lookup,args=(question,qtype))
         
         self.threadpool.add_task(tg)
         
-        starttime=time.time()
-        while result==None:
-            if time.time()-starttime>self.multitimeout:
-                self.logger.warn('timeout in lookup_multi')
-                tempresult={}
-                compcounter=0
-                for task in tg.tasks:
-                    if task.done:
-                        tempresult[task.args[0]]=task.result
-                        compcounter+=1
-                    else:
-                        self.logger.warn( "hanging lookup: %s"%task)
-                self.logger.warn("%s of %s tasks completed"%(compcounter,len(tg.tasks)))
-                result=tempresult
-                
-        
-        #print "lookup multi, questions=%s, qtype=%s , result=%s"%(questions,qtype,result)
+        try:
+            tg.join(self.multitimeout)
+        except TimeOut:
+            self.logger.warn('timeout in lookup_multi')
+            pass
+            
+        result={}
+        for task in tg.tasks:
+            if task.done:
+                result[task.args[0]]=task.result
+            else:
+                self.logger.warn( "hanging lookup: %s"%task)
+
+        print "lookup multi, questions=%s, qtype=%s , result=%s"%(questions,qtype,result)
         
         return result
         
