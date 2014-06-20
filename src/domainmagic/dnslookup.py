@@ -1,8 +1,9 @@
 import thread
+import threading
 from dns import resolver
 from dns.rdatatype import to_text as rdatatype_to_text
  
-from tasker import ThreadPool,Task,TaskGroup
+from tasker import get_default_threadpool,Task,TaskGroup
 import time
 import logging
 
@@ -41,30 +42,52 @@ def _make_results(question,qtype,resolveranswer):
 
 
 class DNSLookup(object):
-    threadpool=ThreadPool(10)
+    threadpool=get_default_threadpool()
+    
+    MAX_PARALLEL_REQUESTS=10
+    
+    semaphore=threading.Semaphore(MAX_PARALLEL_REQUESTS)
     
     def __init__(self):    
         self.nameservers=None
         #override here
-        self.nameservers=['91.208.173.38',]
+        self.nameservers=['91.208.173.38',]    
         
-        #TODO: timeout/override ns doesn't seem to work yet
+        if self.nameservers==None:
+            self.resolver=resolver.Resolver()
+        else:
+            self.resolver=resolver.Resolver(configure=False)
+            self.resolver.nameservers=self.nameservers
+            #print self.resolver.nameservers
         
-        self.timeout=3
         
-        self.resolver=resolver.Resolver()
+        self.resolver.timeout = 3   # timeout for a individual request before retrying
+        self.resolver.lifetime = 10 # max time for a request 
+        self.multitimeout=10
+        
+        
         
         self.logger=logging.getLogger("dnslookup")
         
     def lookup(self,question,qtype='A'):
         """lookup one record returns a list of DNSLookupResult"""
+        assert type(question)==str
+        
         resolveranswer=None
+        
         try:
+            DNSLookup.semaphore.acquire(False)
+            self.logger.debug("query: %s/%s"%(question,qtype))
             resolveranswer = self.resolver.query(question, qtype)
+            self.logger.debug("query %s/%s completed -> %s"%(question,qtype,resolveranswer))
         except resolver.NXDOMAIN:
             pass
         except Exception,e:
+            #TODO: some dnspython exceptions don't have a description - maybe add the full stack?
             self.logger.warning("dnslookup %s/%s failed: %s"%(question,qtype,str(e)))
+        finally:
+            DNSLookup.semaphore.release()
+            
             
         if resolveranswer!=None:
             results=_make_results(question,qtype,resolveranswer)
@@ -95,8 +118,21 @@ class DNSLookup(object):
         
         self.threadpool.add_task(tg)
         
+        starttime=time.time()
         while result==None:
-            pass
+            if time.time()-starttime>self.multitimeout:
+                self.logger.warn('timeout in lookup_multi')
+                tempresult={}
+                compcounter=0
+                for task in tg.tasks:
+                    if task.done:
+                        tempresult[task.args[0]]=task.result
+                        compcounter+=1
+                    else:
+                        self.logger.warn( "hanging lookup: %s"%task)
+                self.logger.warn("%s of %s tasks completed"%(compcounter,len(tg.tasks)))
+                result=tempresult
+                
         
         #print "lookup multi, questions=%s, qtype=%s , result=%s"%(questions,qtype,result)
         

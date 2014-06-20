@@ -39,6 +39,9 @@ class Task(object):
         if self.callback!=None:
             self.callback(self)
             
+    def __repr__(self):
+        return "<Task method='%s' args='%s' kwargs='%s' done=%s >"%(self.method,self.args,self.kwargs, self.done)
+        
             
 class TaskGroup(object):
     """Similar to Task, but can be used to run multiple methods in parallel
@@ -77,7 +80,17 @@ class TaskGroup(object):
         for task in self.tasks:
             worker.pool.add_task(task)      
         
-        
+global default_threadpool
+default_threadpool=None
+
+def get_default_threadpool():
+    global default_threadpool
+    if default_threadpool==None:
+        default_threadpool=ThreadPool(minthreads=50,maxthreads=500,queuesize=100)
+    return default_threadpool
+
+
+  
 class ThreadPool(threading.Thread):
     
     def __init__(self,minthreads=1,maxthreads=None,queuesize=100):
@@ -225,9 +238,10 @@ class Worker(threading.Thread):
             if task==None:
                 continue
             try:
+                self.threadinfo="executing task %s"%task
                 task.execute(self)
-            except Exception:
-                self.logger.error('Unhandled Exception in workertask %s'%str(self))
+            except Exception,e:
+                self.logger.error('Unhandled Exception in workertask %s : %s'%(str(self),str(e)))
                 self.logger.error(traceback.format_exc())
             self.threadinfo='task completed'
         

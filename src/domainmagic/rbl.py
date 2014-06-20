@@ -40,11 +40,11 @@ class RBLProviderBase(object):
         
         self.replycodes[mask]=identifier
     
-    def _listed_identifiers(self,input,dnsresult):
+    def _listed_identifiers(self,input,transform,dnsresult):
         listings=[]
         for code,identifier in self.replycodes.items():
             if dnsresult == code:
-                listings.append((code,self.make_description(input=input,dnsresult=dnsresult,identifier=identifier,replycode=code)))
+                listings.append((code,self.make_description(input=input,dnsresult=dnsresult,transform=transform,identifier=identifier,replycode=code)))
         return listings
 
     def make_description(self,**values):
@@ -65,13 +65,23 @@ class RBLProviderBase(object):
 
     def listed(self,input):
         listings=[]
-        trans=self.transform_input(input)
-        lookups=map(self.make_lookup, trans)
-        arecords=self.resolver.lookup_multi(lookups).values()
-        for ipresults in arecords:
-            for ipresult in ipresults:
-                listings.extend(self._listed_identifiers(input,ipresult.content))
+        transforms=self.transform_input(input)
         
+        lookup_to_trans={}
+        for transform in transforms:
+            lookup_to_trans[self.make_lookup(transform)]=transform
+        
+        logging.debug( "lookup_to_trans=%s"%lookup_to_trans)
+        
+        
+        multidnsresult=self.resolver.lookup_multi(lookup_to_trans.keys())
+        
+        for lookup,arecordlist in multidnsresult.iteritems():
+            if lookup not in lookup_to_trans:
+                self.logger.error("dns error: I asked for %s but got '%s' ?!"%(lookup_to_trans.keys(),lookup))
+            for ipresult in arecordlist:
+                listings.extend(self._listed_identifiers(input,lookup_to_trans[lookup],ipresult.content))
+
         return listings
 
     def __str__(self):
@@ -81,13 +91,13 @@ class RBLProviderBase(object):
         return str(self)
 
 class BitmaskedRBLProvider(RBLProviderBase):                
-    def _listed_identifiers(self,input,dnsresult):
+    def _listed_identifiers(self,input,transform,dnsresult):
         """returns a list of identifiers matching the dns result"""
         listings=[]
         lastoctet=dnsresult.split('.')[-1]
         for mask,identifier in self.replycodes.items():
             if int(lastoctet) & mask == mask:
-                desc=self.make_description(input=input,dnsresult=dnsresult,identifier=identifier,replycode=mask)
+                desc=self.make_description(input=input,transform=transform,dnsresult=dnsresult,identifier=identifier,replycode=mask)
                 listings.append((identifier,desc),)
         return listings
 
@@ -117,11 +127,11 @@ class BlackNSNameProvider(StandardURIBLProvider):
     def transform_input(self,value):
         ret=[]
         try:
-            nsrecords=self.resolver.query(value,'NS')
+            nsrecords=self.resolver.lookup(value,'NS')
             nsnames=[record.content for record in nsrecords]
             return nsnames
-        except:
-            pass
+        except Exception,e:
+            self.logger.warn("Exception in getting ns names: %s"%str(e))
         
         return ret
 
@@ -143,7 +153,7 @@ class BlackNSIPProvider(StandardURIBLProvider):
                 nsips.extend([record.content for record in recordlist])
             return set(nsips)
         except Exception,e:
-            self.logger.warn("Lookup error: %s"%str(e))
+            self.logger.warn("Exception in black ns ip lookup: %s"%str(e))
         
         return ret
 
@@ -159,11 +169,11 @@ class BlackAProvider(StandardURIBLProvider):
     
     def transform_input(self,value):
         try:
-            arecords=self.resolver.query(value,'A')
+            arecords=self.resolver.lookup(value,'A')
             ips=[record.content for record in arecords]
             return ips
-        except:
-            pass
+        except Exception,e:
+            self.logger.warn("Exception on a record lookup: %s"%str(e))
         
         return []
 
@@ -232,17 +242,37 @@ class RBLLookup(object):
         self.providers=providers
         self.logger.debug("Providerlist from configfile: %s"%providers)
     
-    def lookup(self,query):
+    def lookup(self,query,abort_on_first_hit=False):
+        global listed,complete
         listed={}
-        for provider in self.providers:
-            print "checking provider: %s"%provider.rbldomain
-            retlist=provider.listed(query)
-            #identifier -> list of descriptions
-            for identifier,humanreadable in retlist:
+        complete=False
+        
+        def _progress(taskgroup,worker):
+            global listed,complete
+            for identifier,humanreadable in worker.result:
+                print identifier
                 listed[identifier]=humanreadable
-            
-        return listed
-    
+            if abort_on_first_hit:
+                complete=True
+        
+        def _complete(taskgroup):
+            global complete
+            complete=True
+        
+        tg=TaskGroup(progresscallback=_progress, completecallback=_complete)
+        for provider in self.providers:
+            tg.add_task(provider.listed, (query,), )
+        
+        get_default_threadpool().add_task(tg)
+
+        while not complete:
+            pass
+        
+        #copy here, because "late arrivals" might cause the dict to get updated and cause a runtime error
+        return listed.copy()
+
+
+
     
 if __name__=='__main__':
     #logging.basicConfig(level=logging.DEBUG)
@@ -258,8 +288,14 @@ if __name__=='__main__':
         logging.basicConfig(level=logging.DEBUG)
     
     query=sys.argv[1]
+    
+    start=time.time()
     ans=rbl.lookup(query)
+    end=time.time()
+    diff=end-start
     for identifier,explanation in ans.iteritems():
         print "identifier '%s' because: %s"%(identifier,explanation)
     
+    print ""
+    print "execution time: %.4f"%diff
     sys.exit(0)

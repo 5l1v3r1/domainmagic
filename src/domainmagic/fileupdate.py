@@ -58,7 +58,7 @@ class FileUpdater(object):
     def update(self,local_path,force=False):
         #if the file is current, do not update
         if self.is_recent(local_path) and not force:
-            self.logger.debug("File %s is current - not updating")
+            self.logger.debug("File %s is current - not updating"%local_path)
             return
         
         self.logger.debug("Updating %s - aquire lock"%local_path)
@@ -67,7 +67,7 @@ class FileUpdater(object):
         
         #check again in case we were waiting for the lock before and some other thread just updated the file
         if self.is_recent(local_path) and not force:
-            self.logger.debug("File %s is current - not updating")
+            self.logger.debug("File %s is current - not updating"%local_path)
             return
         
         try:
