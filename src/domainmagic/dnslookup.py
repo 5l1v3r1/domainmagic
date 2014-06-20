@@ -1,5 +1,7 @@
 import thread
 from dns import resolver
+from dns.rdatatype import to_text as rdatatype_to_text
+ 
 from tasker import ThreadPool,Task,TaskGroup
 import time
 import logging
@@ -32,7 +34,7 @@ def _make_results(question,qtype,resolveranswer):
         dnr.qtype=qtype
         dnr.content=answer.to_text()
         dnr.ttl=resolveranswer.rrset.ttl
-        #todo: type
+        dnr.rtype=rdatatype_to_text(resolveranswer.rdtype)
         results.append(dnr)
      
     return results
