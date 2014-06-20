@@ -67,6 +67,7 @@ class TaskGroup(object):
                     
             if self.all_done():
                 return
+            time.sleep(0.01)
             
     
     def all_done(self):
