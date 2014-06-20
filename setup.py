@@ -1,12 +1,12 @@
 import sys
 sys.path.insert(0,'src')
 from distutils.core import setup
-from domainmagic import CACHEDIR
+from domainmagic import VERSION
 import glob
 
 
 setup(name = "domainmagic",
-    version = "0.0.1",
+    version = VERSION,
     description = "Python library for all sorts of domain lookup related tuff (rbl lookups, extractors etc)",
     author = "O. Schacher",
     url='',
