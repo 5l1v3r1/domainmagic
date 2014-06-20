@@ -100,8 +100,6 @@ class DNSLookup(object):
         """lookup a list of multiple records of the same qtype. the lookups will be done in parallel
         returns a dict question->[list of DNSLookupResult]
         """
-
-        
         tg=TaskGroup()
         for question in questions:
             tg.add_task(self.lookup,args=(question,qtype))
@@ -121,16 +119,11 @@ class DNSLookup(object):
             else:
                 self.logger.warn( "hanging lookup: %s"%task)
 
-        print "lookup multi, questions=%s, qtype=%s , result=%s"%(questions,qtype,result)
+        #print "lookup multi, questions=%s, qtype=%s , result=%s"%(questions,qtype,result)
         
         return result
         
-        
-        
-         
-         
-     
-     
+
 if __name__=='__main__':
     logging.basicConfig(level=logging.DEBUG)
     d=DNSLookup()
