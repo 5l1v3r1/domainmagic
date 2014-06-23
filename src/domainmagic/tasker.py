@@ -82,7 +82,7 @@ default_threadpool=None
 def get_default_threadpool():
     global default_threadpool
     if default_threadpool==None:
-        default_threadpool=ThreadPool(minthreads=100,maxthreads=500,queuesize=100)
+        default_threadpool=ThreadPool(minthreads=20,maxthreads=100,queuesize=100)
     return default_threadpool
 
 
@@ -174,10 +174,10 @@ class ThreadPool(threading.Thread):
                 changed=True
             
             #log current stats
-            if changed or time.time()-self.laststats>self.statinverval:
-                workerlist="\n%s"%'\n'.join(map(repr,self.workers))
-                self.logger.debug('queuesize=%s workload=%.2f workers=%s workerlist=%s'%(queuesize,workload,numthreads,workerlist))
-                self.laststats=time.time()
+            #if changed or time.time()-self.laststats>self.statinverval:
+            #    workerlist="\n%s"%'\n'.join(map(repr,self.workers))
+            #    self.logger.debug('queuesize=%s workload=%.2f workers=%s workerlist=%s'%(queuesize,workload,numthreads,workerlist))
+            #    self.laststats=time.time()
             
             time.sleep(self.checkinterval)
             #if main thread exits we shutdown too
@@ -228,7 +228,7 @@ class Worker(threading.Thread):
        
     def run(self):
         while self.stayalive:
-            time.sleep(0.01)
+            time.sleep(0.1)
             self.threadinfo='waiting for task'
             task=self.pool.get_task()
             if task==None:
