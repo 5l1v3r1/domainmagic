@@ -4,7 +4,7 @@ import logging
 import urlparse
 
 from tld import get_IANA_TLD_list
-
+from validators import REGEX_IPV4, REGEX_IPV6
 
 
 def build_search_re(tldlist=None):
@@ -27,15 +27,18 @@ def build_search_re(tldlist=None):
     reg+=r")\b"
     
     #dotquad
-    reg+=r"|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
+    reg+=r"|%s"%REGEX_IPV4
     
-    #TODO: ip6
+    #ip6
+    reg+=r"|\[%s\]"%REGEX_IPV6
     
     reg+=r")" # end of domain types
     
     #request
     reg+=r"(?:(?:" #optional stuff after domain
-    reg+=r"/?["+allowed_request_chars+"]+" # TODO: all chars allowed in a request string
+    reg+=r"\/?" # optional / at end of domain
+    
+    reg+="["+allowed_request_chars+"]+" # TODO: all chars allowed in a request string
     reg+=r"|\/))?"
     reg+=r"(?=(?:[^"+allowed_request_chars+"]|$))" #non-uri character or end of line
     #print "RE: %s"%reg
@@ -79,9 +82,13 @@ class URIExtractor(object):
         uris.extend(re.findall(URIExtractor.searchre, plaintext))
         
         finaluris=[]
-        #check skiplist
+        #check skiplist$
         for uri in uris:
-            domain=domain_from_uri(uri.lower())
+            try:
+                domain=domain_from_uri(uri.lower())
+            except Exception,e:
+                self.logger.warn("Extract domain from uri %s failed : %s"%(uri,str(e)))
+                continue
             skip=False
             for skipentry in URIExtractor.skiplist:
                 if domain==skip or domain.endswith(".%s"%skipentry):
