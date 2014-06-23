@@ -2,7 +2,7 @@ from tasker import *
 import logging
 from dnslookup import DNSLookup
 from ip import ip_reversed
-from validators import is_ip
+from validators import is_ip,is_hostname
 import re
 from string import Template
 import os
@@ -130,7 +130,7 @@ class BlackNSNameProvider(StandardURIBLProvider):
         ret=[]
         try:
             nsrecords=self.resolver.lookup(value,'NS')
-            nsnames=[record.content for record in nsrecords]
+            nsnames=[record.content for record in nsrecords if is_hostname(record.content,check_valid_tld=True)]
             return nsnames
         except Exception,e:
             self.logger.warn("Exception in getting ns names: %s"%str(e))
@@ -148,7 +148,7 @@ class BlackNSIPProvider(StandardURIBLProvider):
         ret=[]
         try:
             nsnamerecords=self.resolver.lookup(value,'NS')
-            nsnames=[record.content for record in nsnamerecords]
+            nsnames=[record.content for record in nsnamerecords  if is_hostname(record.content,check_valid_tld=True)]
             nsiprecords=self.resolver.lookup_multi(nsnames,'A').values()
             nsips=[]
             for recordlist in nsiprecords:
