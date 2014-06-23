@@ -10,3 +10,4 @@
 conf/*.conf
 build/
 dist/
+MANIFEST
