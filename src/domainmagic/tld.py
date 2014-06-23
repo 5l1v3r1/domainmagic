@@ -2,7 +2,7 @@
 from domainmagic import updatefile
 import collections
 
-@updatefile('/tmp/tlds-alpha-by-domain.txt','http://data.iana.org/TLD/tlds-alpha-by-domain.txt',minimum_size=1000)
+@updatefile('/tmp/tlds-alpha-by-domain.txt','http://data.iana.org/TLD/tlds-alpha-by-domain.txt',minimum_size=1000,refresh_time=86400)
 def get_IANA_TLD_list():
     tlds=[]
     content=open('/tmp/tlds-alpha-by-domain.txt').readlines()
@@ -11,7 +11,16 @@ def get_IANA_TLD_list():
             continue
         tlds.extend(line.lower().split())
     return list(sorted(tlds))
-    
+
+
+global default_tldmagic
+default_tldmagic=None
+
+def get_default_tldmagic():
+    global default_tldmagic
+    if default_tldmagic==None:
+        default_tldmagic=TLDMagic()
+    return default_tldmagic
 
 class TLDMagic(object):
     def __init__(self):
@@ -27,6 +36,8 @@ class TLDMagic(object):
         parts=domain.split('.')
         parts.reverse()
         tldparts=self._walk(parts,self.tldtree)
+        if len(tldparts)==0:
+            return None
         tldparts.reverse()
         tld= '.'.join(tldparts)
         return tld
@@ -84,6 +95,6 @@ if __name__ == '__main__':
     t.add_tld('bay.livefilestore.com')
     t.add_tld('co.uk')
     
-    for test in ['kaboing.bla.bay.livefilestore.com','yolo.doener.com','blubb.co.uk']:
-        print "%s -> %s"%(test,t.get_tld(test))
+    for test in ['kaboing.bla.bay.livefilestore.com','yolo.doener.com','blubb.co.uk','bloing.bazinga']:
+        print "'%s' -> '%s'"%(test,t.get_tld(test))
     
