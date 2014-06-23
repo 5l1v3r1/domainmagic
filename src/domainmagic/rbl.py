@@ -120,6 +120,7 @@ class StandardURIBLProvider(BitmaskedRBLProvider,ReverseIPMixin):
     """
     pass
 
+
 class BlackNSNameProvider(StandardURIBLProvider):
     """Nameserver Name Blacklists"""
     def __init__(self,rbldomain):
@@ -179,9 +180,15 @@ class BlackAProvider(StandardURIBLProvider):
         
         return []
 
-class FixedResultURIBLProvider(RBLProviderBase):
-    """uribl lookups with fixed return codes, like the spamhaus DBL"""
-    pass
+class FixedResultDomainProvider(RBLProviderBase):
+    """uribl lookups with fixed return codes and ip lookups disabled, like the spamhaus DBL"""
+
+    def transform_input(self,value):
+        """transform input, eg, make md5 hashes here or whatever is needed for your specific provider"""
+        if is_ip(value):
+            return []
+        else:
+            return [value,]
 
 
 class RBLLookup(object):
@@ -190,8 +197,8 @@ class RBLLookup(object):
         self.providers=[]
         
         self.providermap={
-            'domain-bitmask':StandardURIBLProvider,
-            'domain-fixed':FixedResultURIBLProvider,
+            'uri-bitmask':StandardURIBLProvider,
+            'domain-fixed':FixedResultDomainProvider,
             'nsip-bitmask':BlackNSIPProvider,
             'nsname-bitmask':BlackNSNameProvider,
             'a-bitmask':BlackAProvider,
@@ -204,6 +211,7 @@ class RBLLookup(object):
         self.logger.debug('loading rbl lookups from file %s'%filepath)
         if not os.path.exists(filepath):
             self.logger.error("File not found: %s"%filepath)
+            return
         
         providers=[]
         
@@ -244,15 +252,15 @@ class RBLLookup(object):
         self.providers=providers
         self.logger.debug("Providerlist from configfile: %s"%providers)
     
-    def lookup(self,query):
+    def listings(self,domain,timeout=10):
+        """return a dict identifier:humanreadable for each listing"""
         listed={}
-        
         
         tg=TaskGroup()
         for provider in self.providers:
-            tg.add_task(provider.listed, (query,), )
+            tg.add_task(provider.listed, (domain,), )
         get_default_threadpool().add_task(tg)
-        tg.join(10)
+        tg.join(timeout)
 
         for task in tg.tasks:
             if task.done:
@@ -280,7 +288,7 @@ if __name__=='__main__':
     query=sys.argv[1]
     
     start=time.time()
-    ans=rbl.lookup(query)
+    ans=rbl.listings(query)
     end=time.time()
     diff=end-start
     for identifier,explanation in ans.iteritems():
