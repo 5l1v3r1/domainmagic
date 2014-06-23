@@ -32,7 +32,7 @@ class TLDMagic(object):
             self.add_tld(tld)
     
     def get_tld(self,domain):
-        """get the tld from domain, returning the best possible xTLD"""
+        """get the tld from domain, returning the largest possible xTLD"""
         parts=domain.split('.')
         parts.reverse()
         tldparts=self._walk(parts,self.tldtree)
@@ -41,6 +41,15 @@ class TLDMagic(object):
         tldparts.reverse()
         tld= '.'.join(tldparts)
         return tld
+    
+    def get_tld_count(self,domain):
+        """returns the number of tld parts for domain, eg.
+        example.com -> 1
+        bla.co.uk -> 2"""
+        tld=self.get_tld(domain)
+        if tld==None:
+            return 0
+        return len(self.get_tld(domain).split('.'))
     
     def _walk(self,l,node,path=None):
         if path==None:
