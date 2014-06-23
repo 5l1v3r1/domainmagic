@@ -48,10 +48,8 @@ class DNSLookup(object):
     
     semaphore=threading.Semaphore(MAX_PARALLEL_REQUESTS)
     
-    def __init__(self):    
-        self.nameservers=None
-        #override here
-        self.nameservers=['91.208.173.38',]    
+    def __init__(self,nameservers=None,timeout=3,lifetime=10):
+        self.nameservers=nameservers
         
         if self.nameservers==None:
             self.resolver=resolver.Resolver()
@@ -61,12 +59,9 @@ class DNSLookup(object):
             #print self.resolver.nameservers
         
         
-        self.resolver.timeout = 3   # timeout for a individual request before retrying
-        self.resolver.lifetime = 10 # max time for a request 
-        self.multitimeout=10
-        
-        
-        
+        self.resolver.timeout = timeout   # timeout for a individual request before retrying
+        self.resolver.lifetime = lifetime # max time for a request
+
         self.logger=logging.getLogger("dnslookup")
         
     def lookup(self,question,qtype='A'):
@@ -96,7 +91,7 @@ class DNSLookup(object):
             return []
         
     
-    def lookup_multi(self,questions, qtype='A'):
+    def lookup_multi(self,questions, qtype='A',timeout=10):
         """lookup a list of multiple records of the same qtype. the lookups will be done in parallel
         returns a dict question->[list of DNSLookupResult]
         """
@@ -107,7 +102,7 @@ class DNSLookup(object):
         self.threadpool.add_task(tg)
         
         try:
-            tg.join(self.multitimeout)
+            tg.join(10)
         except TimeOut:
             self.logger.warn('timeout in lookup_multi')
             pass
