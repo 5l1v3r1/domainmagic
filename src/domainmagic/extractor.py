@@ -37,7 +37,7 @@ def build_search_re(tldlist=None):
     #request
     reg+=r"(?:(?:" #optional stuff after domain
     reg+=r"\/?" # optional / at end of domain
-    
+    reg+=r"(?=[^&])" # lookahead: & is not allowed here, this filters false positives if the domain is in a borked request string, eg "....bla.com&blubb=bloing"
     reg+="["+allowed_request_chars+"]+" # TODO: all chars allowed in a request string
     reg+=r"|\/))?"
     reg+=r"(?=(?:[^"+allowed_request_chars+"]|$))" #non-uri character or end of line
