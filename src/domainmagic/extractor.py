@@ -1,7 +1,10 @@
 import re
-from tld import get_IANA_TLD_list
+import os
 import logging
 import urlparse
+
+from tld import get_IANA_TLD_list
+
 
 
 def build_search_re(tldlist=None):
@@ -18,10 +21,10 @@ def build_search_re(tldlist=None):
     reg+=r"(?:" # domain types 
     
     #standard domain
-    reg+=r"[-a-z0-9._]+" #TODO: all chars allowed in a domain
+    reg+=r"[-a-z0-9._]+\." #hostname
     reg+=r"(?:" #tldgroup
     reg+="|".join([x.replace('.','\.') for x in tldlist])
-    reg+=r")"
+    reg+=r")\b"
     
     #dotquad
     reg+=r"|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
@@ -39,8 +42,14 @@ def build_search_re(tldlist=None):
     return re.compile(reg,re.IGNORECASE)
 
 
+def domain_from_uri(uri):
+    """extract the domain(fqdn) from uri"""
+    if '://' not in uri:
+        uri="http://"+uri
+    domain=urlparse.urlparse(uri.lower()).netloc
+    return domain
 
-class URIExtractor():
+class URIExtractor(object):
     """Extract URIs"""
 
     searchre = None
@@ -72,10 +81,7 @@ class URIExtractor():
         finaluris=[]
         #check skiplist
         for uri in uris:
-            checkuri=uri.lower()
-            if '://' not in checkuri: #work around urlparse bug
-                checkuri="http://%s"%uri
-            domain=urlparse.urlparse(checkuri).netloc
+            domain=domain_from_uri(uri.lower())
             skip=False
             for skipentry in URIExtractor.skiplist:
                 if domain==skip or domain.endswith(".%s"%skipentry):
