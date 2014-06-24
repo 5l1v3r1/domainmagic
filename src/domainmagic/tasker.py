@@ -124,10 +124,10 @@ class ThreadPool(threading.Thread):
         """
         self.tasks.put(task)
     
-    def get_task(self):
+    def get_task(self,timeout=2):
         """get the next task from the queue. returns None if there is no task at the moment"""
         try:
-            task=self.tasks.get(True, 0.1)
+            task=self.tasks.get(True, timeout)
             return task
         except Queue.Empty:
             return None
@@ -228,7 +228,6 @@ class Worker(threading.Thread):
        
     def run(self):
         while self.stayalive:
-            time.sleep(0.1)
             self.threadinfo='waiting for task'
             task=self.pool.get_task()
             if task==None:
