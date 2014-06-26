@@ -12,7 +12,7 @@ class Extractor(unittest.TestCase):
     
     
     def test_simple_text(self):
-        txt="""hello http://bla.com please click on <a href="www.co.uk">slashdot.org/?a=c&f=m</a> www.skipme.com www.skipmenot.com/ http://allinsurancematters.net/lurchwont/ muahahaha x.org"""
+        txt="""hello http://bla.com please click on <a href="www.co.uk">slashdot.org/?a=c&f=m</a> www.skipme.com www.skipmenot.com/ x.co/4to2S http://allinsurancematters.net/lurchwont/ muahahaha x.org"""
         
         uris=self.candidate.extracturis(txt)
         self.assertTrue('http://bla.com' in uris)
@@ -25,6 +25,8 @@ class Extractor(unittest.TestCase):
         
         self.assertTrue("http://allinsurancematters.net/lurchwont/" in uris)
         self.assertTrue("x.org" in uris,'rule at the end not found')
+        self.assertTrue('x.co/4to2S','x.co short uri not found')
+        
         
     def test_dotquad(self):
         txt="""click on 1.2.3.4 or http://62.2.17.61/ or https://8.8.8.8/bla.com """
