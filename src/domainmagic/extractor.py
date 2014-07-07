@@ -109,6 +109,10 @@ class URIExtractor(object):
             if '..' in domain: #two dots in domain
                 continue
             
+            if uri.endswith(']'):
+                if re.match("^%s$"%REGEX_IPV4,uri[:-1]) is not None:
+                    uri=uri[:-1]
+            
             skip=False
             for skipentry in URIExtractor.skiplist:
                 if domain==skip or domain.endswith(".%s"%skipentry):
