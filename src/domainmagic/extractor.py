@@ -1,10 +1,12 @@
 import re
 import os
+import time
 import logging
 import urlparse
 
 from tld import get_IANA_TLD_list
 from validators import REGEX_IPV4, REGEX_IPV6
+import traceback
 
 
 def build_search_re(tldlist=None):
@@ -57,12 +59,15 @@ class URIExtractor(object):
 
     searchre = None
     skiplist = []
+    maxregexage=86400 #rebuild search regex once a day so we get new tlds
     
     def __init__(self):
         #TODO: skiplist
+        self.lastreload=time.time()
         if URIExtractor.searchre==None:
             URIExtractor.searchre=build_search_re()
         self.logger=logging.getLogger('uriextractor')
+        
         
     def load_skiplist(self,filename):
         URIExtractor.skiplist = self._load_single_file(filename)
@@ -78,6 +83,15 @@ class URIExtractor(object):
         return set(entries)
         
     def extracturis(self,plaintext):
+        if time.time()-self.lastreload>URIExtractor.maxregexage:
+            self.lastreload=time.time()
+            self.logger.debug("Rebuilding search regex with latest TLDs")
+            try:
+                URIExtractor.searchre=build_search_re()
+            except Exception,e:
+                self.logger.error("Rebuilding search re failed: %s"%traceback.format_exc())
+                
+        
         uris=[]
         uris.extend(re.findall(URIExtractor.searchre, plaintext))
         
@@ -106,6 +120,7 @@ class URIExtractor(object):
 
 
 if __name__=='__main__':
+    logging.basicConfig(level=logging.DEBUG)
     extractor=URIExtractor()
-    print extractor.extracturis("hello http://www.wgwh.ch/?doener lol yolo.com .")
-     
+    logging.info(extractor.extracturis("hello http://www.wgwh.ch/?doener lol yolo.com ."))
+    
