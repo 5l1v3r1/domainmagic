@@ -8,10 +8,16 @@ def updatefile(local_path,update_url,**kwargs):
     """decorator which automatically downlads/updates required files
     see fileupdate.Fileupdater.add_file() for possible arguments
     """
+    force_recent=False
+    
+    if 'force_recent' in kwargs:
+        force_recent=True
+        del kwargs['force_recent']
     fileupdater.add_file(local_path,update_url,**kwargs)
+    
     def wrap(f):
         def wrapped_f(*args,**kwargs):
-            fileupdater.wait_for_file(local_path)
+            fileupdater.wait_for_file(local_path,force_recent)
             return f(*args,**kwargs)
         return wrapped_f
     return wrap
