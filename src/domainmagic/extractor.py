@@ -87,14 +87,19 @@ class URIExtractor(object):
             try:
                 domain=domain_from_uri(uri.lower())
             except Exception,e:
-                self.logger.warn("Extract domain from uri %s failed : %s"%(uri,str(e)))
+                #self.logger.warn("Extract domain from uri %s failed : %s"%(uri,str(e)))
                 continue
+                   
+            #work around extractor bugs - these could probably also be fixed in the search regex
+            #but for now it's easier to just throw them out
+            if '..' in domain: #two dots in domain
+                continue
+            
             skip=False
             for skipentry in URIExtractor.skiplist:
                 if domain==skip or domain.endswith(".%s"%skipentry):
                     skip=True
-                    break
-            
+                    break            
             if not skip:
                 finaluris.append(uri)
         return sorted(set(finaluris))
