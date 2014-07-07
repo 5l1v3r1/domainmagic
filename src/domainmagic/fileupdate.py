@@ -64,10 +64,10 @@ class FileUpdater(object):
         self.logger.debug("Updating %s - aquire lock"%local_path)
         self.filedict[local_path]['lock'].acquire()
         
-        
         #check again in case we were waiting for the lock before and some other thread just updated the file
         if self.is_recent(local_path) and not force:
-            self.logger.debug("File %s is current - not updating"%local_path)
+            self.logger.debug("File %s got updated by a different thread - not updating"%local_path)
+            self.filedict[local_path]['lock'].release()
             return
         
         try:
@@ -91,10 +91,6 @@ class FileUpdater(object):
             fd=os.fdopen(handle,'w')
             fd.write(content)
             fd.close()
-            
-    
-            
-            
             os.rename(tmpfilename, local_path)
             
         finally:
