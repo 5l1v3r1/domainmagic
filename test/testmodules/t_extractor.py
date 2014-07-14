@@ -55,6 +55,6 @@ class Extractor(unittest.TestCase):
         self.assertTrue('http://roasty.familyhealingassist.ru?coil&commission' in uris,'did not find uri, result was %s'%uris)
         
     def test_negative(self):
-        txt=""" yolo-hq.com&n=R3QY1V&c=0VZ1ND """
+        txt=""" yolo-hq.com&n=R3QY1V&c=0VZ1ND 1.2.3.4.5 1.2.3 """
         uris=self.candidate.extracturis(txt)
-        self.assertTrue(len(uris)==0,"Invalid uris should not have been extracted: %s"%txt)
+        self.assertTrue(len(uris)==0,"Invalid uris should not have been extracted: %s"%uris)
