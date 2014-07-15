@@ -6,7 +6,7 @@ from validators import is_ip,is_hostname
 import re
 from string import Template
 import os
-
+import hashlib
 
 def remove_trailing_dot(input):
     """if input ends with a dot, remove it"""
@@ -185,6 +185,13 @@ class BlackAProvider(StandardURIBLProvider):
         
         return []
 
+class EmailBLProvider(StandardURIBLProvider):
+    def accept_input(self,value):
+        return '@' in value #simplest email validation ever ;-)
+    
+    def transform_input(self,value):
+        return [hashlib.new('md5', value).hexdigest(),] 
+
 class FixedResultDomainProvider(RBLProviderBase):
     """uribl lookups with fixed return codes and ip lookups disabled, like the spamhaus DBL"""
 
@@ -210,6 +217,7 @@ class RBLLookup(object):
             'nsip-bitmask':BlackNSIPProvider,
             'nsname-bitmask':BlackNSNameProvider,
             'a-bitmask':BlackAProvider,
+            'email-bitmask':EmailBLProvider,
         }
         #TODO: if we ever encounter fixed result rbls for ns/a we extend den from RBLProviderBase and 
         #move the current ones to use ReverseIPMixin
