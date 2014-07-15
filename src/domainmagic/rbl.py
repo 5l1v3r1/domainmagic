@@ -44,7 +44,7 @@ class RBLProviderBase(object):
         listings=[]
         for code,identifier in self.replycodes.items():
             if dnsresult == code:
-                listings.append((code,self.make_description(input=input,dnsresult=dnsresult,transform=transform,identifier=identifier,replycode=code)))
+                listings.append((identifier,self.make_description(input=input,dnsresult=dnsresult,transform=transform,identifier=identifier,replycode=code)))
         return listings
 
     def make_description(self,**values):
