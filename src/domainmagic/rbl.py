@@ -53,8 +53,11 @@ class RBLProviderBase(object):
         values['rbldomain']=self.rbldomain
         return template.safe_substitute(values)
     
+    def accept_input(self,value):
+        return re.match("^[a-zA-Z0-9.-]+$",value)!=None
+    
     def transform_input(self,value):
-        """transform input, eg, make md5 hashes here or whatever is needed for your specific provider"""
+        """transform input, eg, look up records or make md5 hashes here or whatever is needed for your specific provider and return a list of transformed values"""
         return [value,]
 
     def make_lookup(self,transform):
@@ -65,6 +68,8 @@ class RBLProviderBase(object):
 
     def listed(self,input):
         listings=[]
+        if not self.accept_input(input):
+            return []
         transforms=self.transform_input(input)
         
         lookup_to_trans={}
@@ -183,12 +188,15 @@ class BlackAProvider(StandardURIBLProvider):
 class FixedResultDomainProvider(RBLProviderBase):
     """uribl lookups with fixed return codes and ip lookups disabled, like the spamhaus DBL"""
 
-    def transform_input(self,value):
-        """transform input, eg, make md5 hashes here or whatever is needed for your specific provider"""
-        if is_ip(value):
-            return []
-        else:
-            return [value,]
+    def accept_input(self,value):
+        if not super(FixedResultDomainProvider, self).accept_input(value):
+            return False
+
+        if is_ip(value): #dbl is the only known fixed result domain provider and does not allow ip lookups, so we filter this here
+            return False
+        
+        return True        
+        
 
 
 class RBLLookup(object):
