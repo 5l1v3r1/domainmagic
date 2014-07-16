@@ -47,6 +47,24 @@ def build_search_re(tldlist=None):
     return re.compile(reg,re.IGNORECASE)
 
 
+def build_email_re(tldlist=None):
+    if tldlist==None:
+        tldlist=get_IANA_TLD_list()
+    
+    reg=r"(?=.{0,64}\@)"                         # limit userpart to 64 chars
+    reg+=r"(?<![a-z0-9!#$%&'*+\/=?^_`{|}~-])"     # start boundary
+    reg+=r"("                                             # capture email
+    reg+=r"[a-z0-9!#$%&'*+\/=?^_`{|}~-]+"         # no dot in beginning
+    reg+=r"(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*"  # no consecutive dots, no ending dot
+    reg+=r"\@"
+    reg+=r"[-a-z0-9._]+\." #hostname
+    reg+=r"(?:" #tldgroup
+    reg+="|".join([x.replace('.','\.') for x in tldlist])
+    reg+=r")"
+    reg+=r")(?!(?:[a-z0-9-]|\.[a-z0-9]))"          # make sure domain ends here
+    return re.compile(reg,re.IGNORECASE)
+
+    
 def domain_from_uri(uri):
     """extract the domain(fqdn) from uri"""
     if '://' not in uri:
@@ -58,14 +76,18 @@ class URIExtractor(object):
     """Extract URIs"""
 
     searchre = None
+    emailre = None
     skiplist = []
     maxregexage=86400 #rebuild search regex once a day so we get new tlds
     
     def __init__(self):
         #TODO: skiplist
         self.lastreload=time.time()
+        self.lastreloademail=time.time()
         if URIExtractor.searchre==None:
             URIExtractor.searchre=build_search_re()
+        if URIExtractor.emailre==None:
+            URIExtractor.emailre=build_email_re()
         self.logger=logging.getLogger('uriextractor')
         
         
@@ -126,9 +148,26 @@ class URIExtractor(object):
                 finaluris.append(uri)
         return sorted(set(finaluris))
 
+    def extractemails(self,plaintext):
+        if time.time()-self.lastreloademail>URIExtractor.maxregexage:
+            self.lastreloademail=time.time()
+            self.logger.debug("Rebuilding search regex with latest TLDs")
+            try:
+                URIExtractor.emailre=build_email_re()
+            except Exception,e:
+                self.logger.error("Rebuilding email search re failed: %s"%traceback.format_exc())
+                
+        emails=[]
+        emails.extend(re.findall(URIExtractor.emailre, plaintext))
+        return sorted(set(emails))
 
 if __name__=='__main__':
     logging.basicConfig(level=logging.DEBUG)
     extractor=URIExtractor()
     logging.info(extractor.extracturis("hello http://www.wgwh.ch/?doener lol yolo.com ."))
+    
+    logging.info(extractor.extractemails("blah a@b.com someguy@gmail.com"))
+    
+    
+    
     
