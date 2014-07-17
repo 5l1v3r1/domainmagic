@@ -5,7 +5,8 @@
 #  * domain-fixed for domain only lookups with fixed resulsts, eg. spamhaus dbl
 #  * nsip-bitmask for ns ip lookups
 #  * nsname-bitmask for ns name lookups
-#  * a-bitmask for A record lookups 
+#  * a-bitmask for A record lookups
+#  * email-bitmask emailbl lookup 
 # <lookupdomain> is the rbl domain, eg. multi.uribl.com
 # <bitmask> is the bitmask or in the case of 'domain-fixed' the fixed result
 # <identifer> is the identifier which should be returned to the client when the blacklist hits
