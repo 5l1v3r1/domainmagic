@@ -15,7 +15,7 @@ class Extractor(unittest.TestCase):
         txt="""hello http://bla.com please click on <a href="www.co.uk">slashdot.org/?a=c&f=m</a> www.skipme.com www.skipmenot.com/ x.co/4to2S http://allinsurancematters.net/lurchwont/ muahahaha x.org"""
         
         uris=self.candidate.extracturis(txt)
-        self.assertTrue('http://bla.com' in uris)
+        self.assertTrue('http://bla.com' in uris, 'missing http://bla.com from %s, got only %s'%(txt,uris))
         self.assertTrue('www.co.uk' in uris)
         self.assertTrue('slashdot.org/?a=c&f=m' in uris)
         
@@ -58,3 +58,10 @@ class Extractor(unittest.TestCase):
         txt=""" yolo-hq.com&n=R3QY1V&c=0VZ1ND 1.2.3.4.5 1.2.3 2fwww.mktcompany.com.br%2forigem%2femail """
         uris=self.candidate.extracturis(txt)
         self.assertTrue(len(uris)==0,"Invalid uris should not have been extracted: %s"%uris)
+        
+    def test_usernamepw(self):
+        txt=""" ftp://yolo:pw!_!@bla.com/blubb/bloing/baz.zip ftp://yolo@bla.com/blubb/bloing/baz.zip """
+        uris=self.candidate.extracturis(txt)
+        self.assertTrue('ftp://yolo:pw!_!@bla.com/blubb/bloing/baz.zip' in uris,'did not find uri with username and pw. result was %s'%uris)
+        self.assertTrue('ftp://yolo@bla.com/blubb/bloing/baz.zip' in uris,'did not find uri with username. result was %s'%uris)
+    

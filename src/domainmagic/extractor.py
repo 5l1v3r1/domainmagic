@@ -13,20 +13,28 @@ def build_search_re(tldlist=None):
     if tldlist==None:
         tldlist=get_IANA_TLD_list()
     
-    allowed_request_chars=r"-a-z0-9;._/[\]?#+%&="
-    reg=r"(?:\b|(?<=:\"))" #start with boundary or " for href
-    reg+=r"(?:https?://|ftp://)?" #protocol
+    #lookbehind to check for start of url
+    #start with  " for href or space or > for links in tags
+    reg=r"(?:(?<=\")|(?<=\s)|^|(?<=>))" 
     
-    #TODO: username:pw@ ....
+    #url starts here
+    reg+=r"(?:"
+    reg+=r"(?:https?://|ftp://)" #protocol
+    reg+=r"(?:[a-z0-9!%_$]+(?::[a-z0-9!%_$]+)?@)?" #username/pw
+    reg+=")?"
     
     #domain
     reg+=r"(?:" # domain types 
     
     #standard domain
-    reg+=r"[-a-z0-9._]+\." #hostname
+    allowed_hostname_chars=r"-a-z0-9_"
+    reg+=r"[a-z0-9_]" #first char can't be a hyphen
+    reg+=r"["+allowed_hostname_chars+"]*" #there are domains with only one character, like 'x.org'
+    reg+=r"(?:\.["+allowed_hostname_chars+"]+)*" #more hostname parts separated by dot
+    reg+="\." # dot between hostname and tld
     reg+=r"(?:" #tldgroup
     reg+="|".join([x.replace('.','\.') for x in tldlist])
-    reg+=r")\b"
+    reg+=r")\.?" #standard domain can end with a dot
     
     #dotquad
     reg+=r"|%s"%REGEX_IPV4
@@ -36,13 +44,18 @@ def build_search_re(tldlist=None):
     
     reg+=r")" # end of domain types
     
-    #request
-    reg+=r"(?:(?:" #optional stuff after domain
-    reg+=r"\/?" # optional / at end of domain
-    reg+=r"(?=[^&])" # lookahead: & is not allowed here, this filters false positives if the domain is in a borked request string, eg "....bla.com&blubb=bloing"
-    reg+="["+allowed_request_chars+"]+" # TODO: all chars allowed in a request string
-    reg+=r"|\/))?"
-    reg+=r"(?=(?:[^"+allowed_request_chars+"]|$))" #non-uri character or end of line
+    #after the domain, there must be a path sep or quotes space or ? end, check with lookahead
+    reg+=r"""(?=["'/?]|\s|$)"""
+    
+    #path
+    allowed_path_chars=r"-a-z0-9._/%"
+    reg+="(?:\/["+allowed_path_chars+"]+)*"
+    
+    #request params
+    allowed_param_chars=r"-a-z0-9;._/\[\]?#+%&="
+    reg+=r"(?:\/?)" #end domain with optional  slash
+    reg+="(?:\?["+allowed_param_chars+"]*)?" #params must follow after a question mark
+    
     #print "RE: %s"%reg
     return re.compile(reg,re.IGNORECASE)
 
@@ -130,15 +143,7 @@ class URIExtractor(object):
             #but for now it's easier to just throw them out
             if '..' in domain: #two dots in domain
                 continue
-            
-            if uri.endswith(']'): # 1.2.3.4]
-                if re.match("^%s$"%REGEX_IPV4,uri[:-1]) is not None:
-                    uri=uri[:-1]
-            
-            if re.match("^(?:\d{1,3}\.){3}(?:\d{1,3})(?:\.\d{1,3})+$",uri) is not None: # 1.2.3.4.5
-                continue
-            
-            
+
             skip=False
             for skipentry in URIExtractor.skiplist:
                 if domain==skip or domain.endswith(".%s"%skipentry):
@@ -164,10 +169,12 @@ class URIExtractor(object):
 if __name__=='__main__':
     logging.basicConfig(level=logging.DEBUG)
     extractor=URIExtractor()
-    logging.info(extractor.extracturis("hello http://www.wgwh.ch/?doener lol yolo.com ."))
+    #logging.info(extractor.extracturis("hello http://www.wgwh.ch/?doener lol yolo.com . blubb.com."))
     
-    logging.info(extractor.extractemails("blah a@b.com someguy@gmail.com"))
+    #logging.info(extractor.extractemails("blah a@b.com someguy@gmail.com"))
     
+    txt="""hello http://bla.com please click on <a href="www.co.uk">slashdot.org/?a=c&f=m</a> www.skipme.com www.skipmenot.com/ x.co/4to2S http://allinsurancematters.net/lurchwont/ muahahaha x.org"""
+    logging.info(extractor.extracturis(txt))
     
     
     
