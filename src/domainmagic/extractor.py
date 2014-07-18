@@ -13,7 +13,7 @@ def build_search_re(tldlist=None):
     if tldlist==None:
         tldlist=get_IANA_TLD_list()
     
-    allowed_request_chars=r"-a-z0-9._/[\]?+%&="
+    allowed_request_chars=r"-a-z0-9;._/[\]?#+%&="
     reg=r"(?:\b|(?<=:\"))" #start with boundary or " for href
     reg+=r"(?:https?://|ftp://)?" #protocol
     
