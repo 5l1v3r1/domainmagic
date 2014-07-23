@@ -66,28 +66,36 @@ class RBLProviderBase(object):
         """
         return add_trailing_dot(transform)+self.rbldomain
 
-    def listed(self,input):
+    def listed(self,input,parallel=False):
         listings=[]
         if not self.accept_input(input):
             return []
         transforms=self.transform_input(input)
         
-        lookup_to_trans={}
-        for transform in transforms:
-            lookup_to_trans[self.make_lookup(transform)]=transform
-        
-        logging.debug( "lookup_to_trans=%s"%lookup_to_trans)
-        
-        
-        multidnsresult=self.resolver.lookup_multi(lookup_to_trans.keys())
-        
-        for lookup,arecordlist in multidnsresult.iteritems():
-            if lookup not in lookup_to_trans:
-                self.logger.error("dns error: I asked for %s but got '%s' ?!"%(lookup_to_trans.keys(),lookup))
-                continue
+        if parallel:
+            lookup_to_trans={}
+            for transform in transforms:
+                lookup_to_trans[self.make_lookup(transform)]=transform
             
-            for ipresult in arecordlist:
-                listings.extend(self._listed_identifiers(input,lookup_to_trans[lookup],ipresult.content))
+            logging.debug( "lookup_to_trans=%s"%lookup_to_trans)
+        
+            multidnsresult=self.resolver.lookup_multi(lookup_to_trans.keys())
+        
+            for lookup,arecordlist in multidnsresult.iteritems():
+                if lookup not in lookup_to_trans:
+                    self.logger.error("dns error: I asked for %s but got '%s' ?!"%(lookup_to_trans.keys(),lookup))
+                    continue
+                
+                for ipresult in arecordlist:
+                    listings.extend(self._listed_identifiers(input,lookup_to_trans[lookup],ipresult.content))
+        else:
+            for transform in transforms:
+                lookup=self.make_lookup(transform)
+                arecordlist=self.resolver.lookup(lookup)
+                for ipresult in arecordlist:
+                    listings.extend(self._listed_identifiers(input,transform,ipresult.content))
+                
+            
 
         return listings
 
@@ -268,20 +276,26 @@ class RBLLookup(object):
         self.providers=providers
         self.logger.debug("Providerlist from configfile: %s"%providers)
     
-    def listings(self,domain,timeout=10):
+    def listings(self,domain,timeout=10,parallel=False):
         """return a dict identifier:humanreadable for each listing"""
         listed={}
         
-        tg=TaskGroup()
-        for provider in self.providers:
-            tg.add_task(provider.listed, (domain,), )
-        get_default_threadpool().add_task(tg)
-        tg.join(timeout)
-
-        for task in tg.tasks:
-            if task.done:
-                for identifier,humanreadable in task.result:
+        if parallel:
+            tg=TaskGroup()
+            for provider in self.providers:
+                tg.add_task(provider.listed, (domain,), )
+            get_default_threadpool().add_task(tg)
+            tg.join(timeout)
+    
+            for task in tg.tasks:
+                if task.done:
+                    for identifier,humanreadable in task.result:
+                        listed[identifier]=humanreadable
+        else:
+            for provider in self.providers:
+                for identifier,humanreadable in provider.listed(domain):
                     listed[identifier]=humanreadable
+                    
         
         return listed.copy()
 

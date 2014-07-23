@@ -42,7 +42,7 @@ def _make_results(question,qtype,resolveranswer):
 
 
 class DNSLookup(object):
-    threadpool=get_default_threadpool()
+    threadpool=None
     
     MAX_PARALLEL_REQUESTS=100
     
@@ -99,6 +99,8 @@ class DNSLookup(object):
         for question in questions:
             tg.add_task(self.lookup,args=(question,qtype))
         
+        if self.threadpool==None:
+            self.threadpool=get_default_threadpool()
         self.threadpool.add_task(tg)
         
         try:
