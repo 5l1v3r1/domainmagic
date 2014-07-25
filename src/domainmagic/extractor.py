@@ -52,7 +52,7 @@ def build_search_re(tldlist=None):
     reg+="(?:\/["+allowed_path_chars+"]+)*"
     
     #request params
-    allowed_param_chars=r"-a-z0-9;._/\[\]?#+%&="
+    allowed_param_chars=r"-a-z0-9;._/\[\]?#+%&=@"
     reg+=r"(?:\/?)" #end domain with optional  slash
     reg+="(?:\?["+allowed_param_chars+"]*)?" #params must follow after a question mark
     

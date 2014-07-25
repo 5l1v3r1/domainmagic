@@ -65,3 +65,9 @@ class Extractor(unittest.TestCase):
         self.assertTrue('ftp://yolo:pw!_!@bla.com/blubb/bloing/baz.zip' in uris,'did not find uri with username and pw. result was %s'%uris)
         self.assertTrue('ftp://yolo@bla.com/blubb/bloing/baz.zip' in uris,'did not find uri with username. result was %s'%uris)
     
+    
+    def test_url_with_at(self):
+        txt="""hello http://www.recswangy.com/news.php?email=kev-becca@wedding-bells.org.uk&clt=EH please click"""
+        uris=self.candidate.extracturis(txt)
+        self.assertTrue('http://www.recswangy.com/news.php?email=kev-becca@wedding-bells.org.uk&clt=EH' in uris,'uri with @ character not found')
+        
