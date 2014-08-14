@@ -71,3 +71,8 @@ class Extractor(unittest.TestCase):
         uris=self.candidate.extracturis(txt)
         self.assertTrue('http://www.recswangy.com/news.php?email=kev-becca@wedding-bells.org.uk&clt=EH' in uris,'uri with @ character not found')
         
+    def test_ending_qmark(self):
+        txt="""aaa http://hoostie.com/rescatenews/files/images/dw_logo.png?  bbb"""
+        uris=self.candidate.extracturis(txt)
+        self.assertTrue('http://hoostie.com/rescatenews/files/images/dw_logo.png?' in uris,'uri with ending ? not found')
+        
