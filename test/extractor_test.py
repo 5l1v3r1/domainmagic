@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import unittest
-from extractor import URIExtractor,domain_from_uri
+import sys
+sys.path.insert(0,'../src')
+import domainmagic
+from domainmagic.extractor import URIExtractor,domain_from_uri
 
 class Extractor(unittest.TestCase):
     def setUp(self):
