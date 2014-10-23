@@ -148,7 +148,12 @@ class URIExtractor(object):
             for skipentry in URIExtractor.skiplist:
                 if domain==skip or domain.endswith(".%s"%skipentry):
                     skip=True
-                    break            
+                    break
+
+            #axb: trailing dots are probably not part of the uri
+            if uri.endswith('.'):
+                uri=uri[:-1]
+
             if not skip:
                 finaluris.append(uri)
         return sorted(set(finaluris))
