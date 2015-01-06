@@ -218,7 +218,8 @@ class RBLLookup(object):
     def __init__(self):
         self.logger=logging.getLogger('cmbl.rbllookup')
         self.providers=[]
-        
+        self.resolver=DNSLookup()
+
         self.providermap={
             'uri-bitmask':StandardURIBLProvider,
             'domain-fixed':FixedResultDomainProvider,
@@ -257,6 +258,7 @@ class RBLLookup(object):
             providerclass=self.providermap[providertype]
             
             providerinstance=providerclass(searchdomain)
+            providerinstance.resolver=self.resolver
 
             #set bitmasks
             for res in resultconfig.split():
