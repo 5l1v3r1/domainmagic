@@ -1,6 +1,10 @@
 import sys
 sys.path.insert(0,'src')
-from distutils.core import setup
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils import setup
+
 from domainmagic import VERSION
 import glob
 
@@ -13,6 +17,10 @@ setup(name = "domainmagic",
     author_email = "oli@wgwh.ch",
     package_dir={'':'src'},
     packages = ['domainmagic',],
+    install_requires=[
+        'dnspython',
+        'pygeoip',
+    ],
     long_description = """Python library for all sorts of domain lookup related tuff (rbl lookups, extractors etc)""" ,
     data_files=[
                ('/etc/domainmagic',glob.glob('conf/*.dist')),
