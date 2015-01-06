@@ -11,3 +11,5 @@ conf/*.conf
 build/
 dist/
 MANIFEST
+.idea/
+src/domainmagic.egg-info/
