@@ -48,7 +48,7 @@ def build_search_re(tldlist=None):
     reg+=r"""(?=["'/?]|\s|$)"""
     
     #path
-    allowed_path_chars=r"-a-z0-9._/%"
+    allowed_path_chars=r"-a-z0-9._/%#\[\]"
     reg+="(?:\/["+allowed_path_chars+"]+)*"
     
     #request params

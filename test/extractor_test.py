@@ -78,4 +78,8 @@ class Extractor(unittest.TestCase):
         txt="""aaa http://hoostie.com/rescatenews/files/images/dw_logo.png?  bbb"""
         uris=self.candidate.extracturis(txt)
         self.assertTrue('http://hoostie.com/rescatenews/files/images/dw_logo.png?' in uris,'uri with ending ? not found')
-        
+
+    def test_url_with_bracket(self):
+        txt="""hello http://phohoanglong.com/]Spyware please click"""
+        uris=self.candidate.extracturis(txt)
+        self.assertTrue('http://phohoanglong.com/]Spyware' in uris,'uri with ] in path character not found')

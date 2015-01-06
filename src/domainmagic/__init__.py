@@ -1,6 +1,6 @@
 from fileupdate import FileUpdater
 
-VERSION="0.0.1"
+VERSION="0.0.3"
 
 
 fileupdater=FileUpdater()
