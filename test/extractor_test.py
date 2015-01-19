@@ -82,4 +82,10 @@ class Extractor(unittest.TestCase):
     def test_url_with_bracket(self):
         txt="""hello http://phohoanglong.com/]Spyware please click"""
         uris=self.candidate.extracturis(txt)
-        self.assertTrue('http://phohoanglong.com/]Spyware' in uris,'uri with ] in path character not found')
+        self.assertTrue('http://phohoanglong.com/]Spyware' in uris,'uri with ] character in path not found')
+
+    def test_url_with_tilde(self):
+        txt="""http://vanwinkle.de/NEW.IMPORTANT-NATWEST~BANKLINE-FORM/new_bankline.html please click"""
+        uris=self.candidate.extracturis(txt)
+        self.assertTrue('http://vanwinkle.de/NEW.IMPORTANT-NATWEST~BANKLINE-FORM/new_bankline.html' in uris,'uri with ~ character in path not found')
+
