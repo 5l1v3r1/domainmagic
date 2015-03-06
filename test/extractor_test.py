@@ -89,3 +89,8 @@ class Extractor(unittest.TestCase):
         uris=self.candidate.extracturis(txt)
         self.assertTrue('http://vanwinkle.de/NEW.IMPORTANT-NATWEST~BANKLINE-FORM/new_bankline.html' in uris,'uri with ~ character in path not found')
 
+
+    def test_url_after_parentheses(self):
+        txt=")http://vhyue.com/gbn3q/jahy6?id=8071100&pass=EmxUo4ST&mid=498270380&m=detail"
+        uris=self.candidate.extracturis(txt)
+        self.assertTrue('http://vhyue.com/gbn3q/jahy6?id=8071100&pass=EmxUo4ST&mid=498270380&m=detail' in uris,'uri after closing parentheses not found')

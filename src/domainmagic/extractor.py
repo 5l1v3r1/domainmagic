@@ -14,8 +14,12 @@ def build_search_re(tldlist=None):
         tldlist=get_IANA_TLD_list()
     
     #lookbehind to check for start of url
-    #start with  " for href or space or > for links in tags
-    reg=r"(?:(?<=\")|(?<=\s)|^|(?<=>))" 
+    #start with
+    # - " for href
+    # - whitespace
+    # - > for links in tags
+    # - ) after closing parentheses (seen in chinese spam)
+    reg=r"(?:(?<=\")|(?<=\s)|^|(?<=>)|(?<=\)))"
     
     #url starts here
     reg+=r"(?:"
