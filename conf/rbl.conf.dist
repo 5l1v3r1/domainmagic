@@ -2,7 +2,7 @@
 # <lookuptype> <lookupdomain> <bitmask>:<identifier> [<bitmask>:<identifier> ...]
 # <lookuptype> is one of: 
 #  * uri-bitmask for domain or ip lookups with bitmasked results, eg. uribl, surbl, ..
-#  * domain-fixed for domain only lookups with fixed resulsts, eg. spamhaus dbl
+#  * domain-fixed for domain only lookups with fixed results, eg. spamhaus dbl
 #  * nsip-bitmask for ns ip lookups
 #  * nsname-bitmask for ns name lookups
 #  * a-bitmask for A record lookups
