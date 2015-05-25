@@ -47,6 +47,9 @@ def build_search_re(tldlist=None):
     reg+=r"|\[%s\]"%REGEX_IPV6
     
     reg+=r")" # end of domain types
+
+    #optional port
+    reg+=r"(?:\:\d{1,5})?"
     
     #after the domain, there must be a path sep or quotes space or ? end, check with lookahead
     reg+=r"""(?=["'/?]|\s|$)"""

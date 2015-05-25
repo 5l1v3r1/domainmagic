@@ -94,3 +94,8 @@ class Extractor(unittest.TestCase):
         txt=")http://vhyue.com/gbn3q/jahy6?id=8071100&pass=EmxUo4ST&mid=498270380&m=detail"
         uris=self.candidate.extracturis(txt)
         self.assertTrue('http://vhyue.com/gbn3q/jahy6?id=8071100&pass=EmxUo4ST&mid=498270380&m=detail' in uris,'uri after closing parentheses not found')
+
+    def test_url_with_port(self):
+        txt=" http://www.ironchampusa.ru:8177/247emaillists/ "
+        uris=self.candidate.extracturis(txt)
+        self.assertTrue('http://www.ironchampusa.ru:8177/247emaillists/' in uris,'uri with port not found')
