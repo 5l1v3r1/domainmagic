@@ -100,16 +100,22 @@ class URIExtractor(object):
     skiplist = []
     maxregexage=86400 #rebuild search regex once a day so we get new tlds
     
-    def __init__(self):
+    def __init__(self,tldlist=None):
         #TODO: skiplist
+        self.tldlist=tldlist
         self.lastreload=time.time()
         self.lastreloademail=time.time()
         if URIExtractor.searchre==None:
-            URIExtractor.searchre=build_search_re()
+            URIExtractor.searchre=build_search_re(self.tldlist)
         if URIExtractor.emailre==None:
-            URIExtractor.emailre=build_email_re()
+            URIExtractor.emailre=build_email_re(self.tldlist)
         self.logger=logging.getLogger('uriextractor')
-        
+
+    def set_tld_list(self,tldlist):
+        """override the tldlist and rebuild the search regex"""
+        URIExtractor.searchre=build_search_re(self.tldlist)
+        URIExtractor.emailre=build_email_re(self.tldlist)
+
         
     def load_skiplist(self,filename):
         URIExtractor.skiplist = self._load_single_file(filename)
@@ -125,15 +131,14 @@ class URIExtractor(object):
         return set(entries)
         
     def extracturis(self,plaintext):
-        if time.time()-self.lastreload>URIExtractor.maxregexage:
+        if self.tldlist==None and time.time()-self.lastreload>URIExtractor.maxregexage:
             self.lastreload=time.time()
             self.logger.debug("Rebuilding search regex with latest TLDs")
             try:
                 URIExtractor.searchre=build_search_re()
             except Exception,e:
                 self.logger.error("Rebuilding search re failed: %s"%traceback.format_exc())
-                
-        
+
         uris=[]
         uris.extend(re.findall(URIExtractor.searchre, plaintext))
         
