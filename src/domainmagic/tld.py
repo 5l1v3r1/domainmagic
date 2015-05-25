@@ -50,6 +50,14 @@ class TLDMagic(object):
         if tld==None:
             return 0
         return len(self.get_tld(domain).split('.'))
+
+    def split(self,domain):
+        """split the domain into hostname labels and tld. returns a 2-tuple, the first element is a list of hostname lablels, the second element is the tld
+        eg.: foo.bar.baz.co.uk returns (['foo','bar','baz'],'co.uk')
+        """
+        tldcount=self.get_tld_count(domain)
+        labels=domain.split('.')
+        return labels[:-tldcount],'.'.join(labels[-tldcount:])
     
     def _walk(self,l,node,path=None):
         if path==None:
