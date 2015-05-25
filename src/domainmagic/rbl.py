@@ -278,7 +278,7 @@ class RBLLookup(object):
         self.providers=providers
         self.logger.debug("Providerlist from configfile: %s"%providers)
     
-    def listings(self,domain,timeout=10,parallel=False):
+    def listings(self,domain,timeout=10,parallel=False,abort_on_hit=False):
         """return a dict identifier:humanreadable for each listing"""
         listed={}
         
@@ -297,8 +297,9 @@ class RBLLookup(object):
             for provider in self.providers:
                 for identifier,humanreadable in provider.listed(domain):
                     listed[identifier]=humanreadable
-                    
-        
+                    if abort_on_hit:
+                        return listed
+
         return listed.copy()
 
 
