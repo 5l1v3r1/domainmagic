@@ -3,7 +3,7 @@ import unittest
 import sys
 sys.path.insert(0,'../src')
 import domainmagic
-from domainmagic.extractor import URIExtractor,domain_from_uri
+from domainmagic.extractor import URIExtractor,fqdn_from_uri
 
 class Extractor(unittest.TestCase):
     def setUp(self):
@@ -99,3 +99,7 @@ class Extractor(unittest.TestCase):
         txt=" http://www.ironchampusa.ru:8177/247emaillists/ "
         uris=self.candidate.extracturis(txt)
         self.assertTrue('http://www.ironchampusa.ru:8177/247emaillists/' in uris,'uri with port not found')
+
+
+    def test_fqdn_from_uri(self):
+        self.assertEquals(fqdn_from_uri('http://www.ironchampusa.ru:8177/247emaillists/') ,'www.ironchampusa.ru')

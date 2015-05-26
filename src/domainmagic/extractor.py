@@ -86,11 +86,22 @@ def build_email_re(tldlist=None):
 
     
 def domain_from_uri(uri):
+    """backwards compatibilty name. this method is used in urihash/uriextract fuglu plugins"""
+    return fqdn_from_uri(uri)
+
+def fqdn_from_uri(uri):
     """extract the domain(fqdn) from uri"""
     if '://' not in uri:
         uri="http://"+uri
-    domain=urlparse.urlparse(uri.lower()).netloc
-    return domain
+    fqdn=urlparse.urlparse(uri.lower()).netloc
+
+    #remove port
+    portmatch=re.search('\:\d+$',fqdn)
+    if portmatch!=None:
+        fqdn=fqdn[:portmatch.span()[0]]
+
+    return fqdn
+
 
 class URIExtractor(object):
     """Extract URIs"""

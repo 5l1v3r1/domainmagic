@@ -1,6 +1,8 @@
 
 from domainmagic import updatefile
 import collections
+import re
+
 
 @updatefile('/tmp/tlds-alpha-by-domain.txt','http://data.iana.org/TLD/tlds-alpha-by-domain.txt',minimum_size=1000,refresh_time=86400,force_recent=True)
 def get_IANA_TLD_list():
@@ -22,10 +24,30 @@ def get_default_tldmagic():
         default_tldmagic=TLDMagic()
     return default_tldmagic
 
+
+def load_tld_file(filename):
+    retval=[]
+    for line in open(filename,'r').readlines():
+        if line.startswith('#') or line.strip()=='':
+            continue
+        tlds=line.split()
+        for tld in tlds:
+            if tld.startswith('.'):
+                tld=tld[1:]
+            tld=tld.lower()
+            if re.match('^[a-z0-9\-\.]+$',tld):
+                if tld not in retval:
+                    retval.append(tld)
+    return retval
+
 class TLDMagic(object):
-    def __init__(self):
-        self.tldtree={}
-        self._add_iana_tlds()
+    def __init__(self,initialtldlist=None):
+        self.tldtree={} #store
+        if initialtldlist==None:
+            self._add_iana_tlds()
+        else:
+            for tld in initialtldlist:
+                self.add_tld(tld)
         
     def _add_iana_tlds(self):
         for tld in get_IANA_TLD_list():
@@ -33,6 +55,7 @@ class TLDMagic(object):
     
     def get_tld(self,domain):
         """get the tld from domain, returning the largest possible xTLD"""
+        domain=domain.lower()
         parts=domain.split('.')
         parts.reverse()
         tldparts=self._walk(parts,self.tldtree)
@@ -60,6 +83,7 @@ class TLDMagic(object):
         return labels[:-tldcount],'.'.join(labels[-tldcount:])
     
     def _walk(self,l,node,path=None):
+        """walk list l through dict l and return a list of all nodes found up until a leaf node"""
         if path==None:
             path=[]
         
@@ -92,18 +116,15 @@ class TLDMagic(object):
 
     def add_tld(self,tld):
         """add a new tld to the list"""
+        tld=tld.lower()
         parts=tld.split('.')
         parts.reverse()
         update=self._list_to_dict(parts)
         self.tldtree=self._dict_update(self.tldtree, update)
 
     def add_tlds_from_file(self,filename):
-        for line in open(filename,'r').readlines():
-            if line.startswith('#') or line.strip()=='':
-                continue
-            tlds=line.split()
-            for tld in tlds:
-                self.add_tld(tld)
+        for tld in load_tld_file(filename):
+            self.add_tld(tld)
             
     
     
