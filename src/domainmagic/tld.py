@@ -1,5 +1,6 @@
 
 from domainmagic import updatefile
+from util import dict_update,dict_path,list_to_dict
 import collections
 import re
 
@@ -58,7 +59,7 @@ class TLDMagic(object):
         domain=domain.lower()
         parts=domain.split('.')
         parts.reverse()
-        tldparts=self._walk(parts,self.tldtree)
+        tldparts=dict_path(parts,self.tldtree)
         if len(tldparts)==0:
             return None
         tldparts.reverse()
@@ -81,46 +82,14 @@ class TLDMagic(object):
         tldcount=self.get_tld_count(domain)
         labels=domain.split('.')
         return labels[:-tldcount],'.'.join(labels[-tldcount:])
-    
-    def _walk(self,l,node,path=None):
-        """walk list l through dict l and return a list of all nodes found up until a leaf node"""
-        if path==None:
-            path=[]
-        
-        if len(l)==0:
-            return path
-        
-        if l[0] in node:
-            path.append(l[0])
-            return self._walk(l[1:],node[l[0]],path)
-        
-        return path
-                
-    def _dict_update(self,d, u):
-        for k, v in u.iteritems():
-            if isinstance(v, collections.Mapping):
-                r = self._dict_update(d.get(k, {}), v)
-                d[k] = r
-            else:
-                d[k] = u[k]
-        return d
-    
-    def _list_to_dict(self,l):
-        """translate a list into a tree path"""
-        d={}
-        if len(l)==0:
-            return d
-        else:
-            d[l[0]]=self._list_to_dict(l[1:])
-            return d
 
     def add_tld(self,tld):
         """add a new tld to the list"""
         tld=tld.lower()
         parts=tld.split('.')
         parts.reverse()
-        update=self._list_to_dict(parts)
-        self.tldtree=self._dict_update(self.tldtree, update)
+        update=list_to_dict(parts)
+        self.tldtree=dict_update(self.tldtree, update)
 
     def add_tlds_from_file(self,filename):
         for tld in load_tld_file(filename):
