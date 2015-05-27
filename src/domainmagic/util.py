@@ -31,6 +31,26 @@ def dict_update(d, u):
             d[k] = u[k]
     return d
 
+def dict_topdown_iterator(d,path=None,skiptop=False):
+    """walk through a dict and list all possible paths. Optional path prepends additional path elements
+    if skiptop is True, skips the current level and drills down to the next level
+    """
+
+    if path==None:
+        path=[]
+    currentlevel=d.keys()
+    if not skiptop:
+        for node in currentlevel:
+            yield path[:]+[node,]
+
+    #drill down
+    for node in currentlevel:
+        if isinstance(d[node], collections.Mapping):
+            for result in dict_topdown_iterator(d[node],path=path+[node,],skiptop=False):
+                yield result
+
+
+
 def list_to_dict(l):
     """translate a list into a tree path"""
     d={}
@@ -39,3 +59,4 @@ def list_to_dict(l):
     else:
         d[l[0]]=list_to_dict(l[1:])
         return d
+

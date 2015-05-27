@@ -38,3 +38,15 @@ class UtilTest(unittest.TestCase):
         self.assertEquals(dict_path(['co.uk','example'],domaintree),['co.uk','example'])
         self.assertEquals(dict_path(['com','example'],domaintree),[])
 
+
+    def test_topdown_iterator(self):
+        d={'co.uk': {'foobar': {}, 'example': {'kebap': {'doener': {}}}}}
+        result=[x for x in dict_topdown_iterator(d)]
+        self.assertEquals(len(result),5)
+        self.assertEquals(result[0],['co.uk'])
+        self.assertEquals(result[4],['co.uk', 'example', 'kebap', 'doener'])
+        #check order
+        prevlen=1
+        for x in result:
+            self.assertTrue(len(x)>=prevlen)
+            prevlen=len(x)
