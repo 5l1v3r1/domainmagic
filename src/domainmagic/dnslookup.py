@@ -74,7 +74,7 @@ class DNSLookup(object):
             DNSLookup.semaphore.acquire(False)
             self.logger.debug("query: %s/%s"%(question,qtype))
             resolveranswer = self.resolver.query(question, qtype)
-            self.logger.debug("query %s/%s completed -> %s"%(question,qtype,resolveranswer))
+            self.logger.debug("query %s/%s completed -> %s"%(question,qtype,resolveranswer.rrset))
         except resolver.NXDOMAIN:
             pass
         except Exception,e:
