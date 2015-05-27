@@ -279,7 +279,9 @@ class RBLLookup(object):
         self.logger.debug("Providerlist from configfile: %s"%providers)
     
     def listings(self,domain,timeout=10,parallel=False,abort_on_hit=False):
-        """return a dict identifier:humanreadable for each listing"""
+        """return a dict identifier:humanreadable for each listing
+        warning: parallel is very experimental and has bugs - do not use atm
+        """
         listed={}
         
         if parallel:
