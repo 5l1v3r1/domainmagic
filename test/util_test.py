@@ -40,13 +40,15 @@ class UtilTest(unittest.TestCase):
 
 
     def test_topdown_iterator(self):
-        d={'co.uk': {'foobar': {}, 'example': {'kebap': {'doener': {}}}}}
+        d={
+            'co.uk': {'foobar': {}, 'example': {'kebap': {'doener': {}}}},
+            'com':   {'foobar': {}, 'example': {'kebap': {'doener': {}}}},
+           }
+
         result=[x for x in dict_topdown_iterator(d)]
-        self.assertEquals(len(result),5)
-        self.assertEquals(result[0],['co.uk'])
-        self.assertEquals(result[4],['co.uk', 'example', 'kebap', 'doener'])
+        self.assertEquals(len(result),10)
         #check order
         prevlen=1
         for x in result:
-            self.assertTrue(len(x)>=prevlen)
+            self.assertTrue(len(x)>=prevlen,"wrong topdown ordering: %s"%result)
             prevlen=len(x)

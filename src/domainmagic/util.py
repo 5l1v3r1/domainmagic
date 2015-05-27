@@ -36,19 +36,23 @@ def dict_topdown_iterator(d,path=None,skiptop=False):
     if skiptop is True, skips the current level and drills down to the next level
     """
 
+    allpaths=[]
     if path==None:
         path=[]
-    currentlevel=d.keys()
+    currentlevel=sorted(d.keys())
     if not skiptop:
         for node in currentlevel:
-            yield path[:]+[node,]
+            allpaths.append(path[:]+[node,])
 
     #drill down
     for node in currentlevel:
         if isinstance(d[node], collections.Mapping):
             for result in dict_topdown_iterator(d[node],path=path+[node,],skiptop=False):
-                yield result
+                allpaths.append(result)
 
+    for path in sorted(allpaths,key=len):
+        yield path
+        
 
 
 def list_to_dict(l):
