@@ -103,3 +103,8 @@ class Extractor(unittest.TestCase):
 
     def test_fqdn_from_uri(self):
         self.assertEquals(fqdn_from_uri('http://www.ironchampusa.ru:8177/247emaillists/') ,'www.ironchampusa.ru')
+
+    def test_url_with_leading_crap(self):
+        txt="   ��*http://f5399r5hxs.com/epPgyPk/yYluS3/LPjyRhr/SlqRhe/YeuVlrX/maSsBVk/BiRJU "
+        uris=self.candidate.extracturis(txt)
+        self.assertTrue('http://f5399r5hxs.com/epPgyPk/yYluS3/LPjyRhr/SlqRhe/YeuVlrX/maSsBVk/BiRJU' in uris,'uri with leading crap chars not found')

@@ -19,7 +19,8 @@ def build_search_re(tldlist=None):
     # - whitespace
     # - > for links in tags
     # - ) after closing parentheses (seen in chinese spam)
-    reg=r"(?:(?<=\")|(?<=\s)|^|(?<=>)|(?<=\)))"
+    # * seen in spam
+    reg=r"(?:(?<=\")|(?<=\s)|^|(?<=>)|(?<=\))|(?<=\*))"
     
     #url starts here
     reg+=r"(?:"
