@@ -15,12 +15,15 @@ def build_search_re(tldlist=None):
     
     #lookbehind to check for start of url
     #start with
-    # - " for href
+    # - start of string
     # - whitespace
+    # - " for href
     # - > for links in tags
     # - ) after closing parentheses (seen in chinese spam)
-    # * seen in spam
-    reg=r"(?:(?<=\")|(?<=\s)|^|(?<=>)|(?<=\))|(?<=\*))"
+    # - * seen in spam
+    reg=r"(?:(?<=^)|(?<="
+    reg+=r"(?:\s|[\"\>\)\*])"
+    reg+="))"
     
     #url starts here
     reg+=r"(?:"
