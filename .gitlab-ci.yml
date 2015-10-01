@@ -1,7 +1,6 @@
 image: gryphius/centos6-with-git
 
 unittests:
-  stage: stage1
   script:
     - yum -q -y install python-setuptools python-nose
     - easy_install -q pip
