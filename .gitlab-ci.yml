@@ -10,3 +10,4 @@ unittests:
     - nosetests test
   only:
     - master
+
