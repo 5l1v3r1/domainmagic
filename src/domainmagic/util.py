@@ -52,7 +52,7 @@ def dict_topdown_iterator(d,path=None,skiptop=False):
 
     for path in sorted(allpaths,key=len):
         yield path
-        
+
 
 
 def list_to_dict(l):
