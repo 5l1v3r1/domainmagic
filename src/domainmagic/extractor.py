@@ -93,6 +93,7 @@ def domain_from_uri(uri):
     """backwards compatibilty name. this method is used in urihash/uriextract fuglu plugins"""
     return fqdn_from_uri(uri)
 
+
 def fqdn_from_uri(uri):
     """extract the domain(fqdn) from uri"""
     if '://' not in uri:
