@@ -54,10 +54,10 @@ class TLDMagic(object):
         for tld in get_IANA_TLD_list():
             self.add_tld(tld)
     
-    def get_tld(self,domain):
+    def get_tld(self,fqdn):
         """get the tld from domain, returning the largest possible xTLD"""
-        domain=domain.lower()
-        parts=domain.split('.')
+        fqdn=fqdn.lower()
+        parts=fqdn.split('.')
         parts.reverse()
         tldparts=dict_path(parts,self.tldtree)
         if len(tldparts)==0:
@@ -66,21 +66,32 @@ class TLDMagic(object):
         tld= '.'.join(tldparts)
         return tld
     
-    def get_tld_count(self,domain):
+    def get_tld_count(self,fqdn):
         """returns the number of tld parts for domain, eg.
         example.com -> 1
         bla.co.uk -> 2"""
-        tld=self.get_tld(domain)
+        tld=self.get_tld(fqdn)
         if tld==None:
             return 0
-        return len(self.get_tld(domain).split('.'))
+        return len(self.get_tld(fqdn).split('.'))
 
-    def split(self,domain):
-        """split the domain into hostname labels and tld. returns a 2-tuple, the first element is a list of hostname lablels, the second element is the tld
+    def get_domain(self,fqdn):
+        """returns the domain name with all subdomains stripped.
+         eg, TLD + one label
+         """
+        hostlabels,tld = self.split(fqdn)
+        if len(hostlabels)>0:
+            return "%s.%s"%(hostlabels[-1],tld)
+        else:
+            return tld
+
+
+    def split(self,fqdn):
+        """split the fqdn into hostname labels and tld. returns a 2-tuple, the first element is a list of hostname lablels, the second element is the tld
         eg.: foo.bar.baz.co.uk returns (['foo','bar','baz'],'co.uk')
         """
-        tldcount=self.get_tld_count(domain)
-        labels=domain.split('.')
+        tldcount=self.get_tld_count(fqdn)
+        labels=fqdn.split('.')
         return labels[:-tldcount],'.'.join(labels[-tldcount:])
 
     def add_tld(self,tld):
@@ -102,6 +113,6 @@ if __name__ == '__main__':
     t.add_tld('bay.livefilestore.com')
     t.add_tld('co.uk')
     
-    for test in ['kaboing.bla.bay.livefilestore.com','yolo.doener.com','blubb.co.uk','bloing.bazinga']:
+    for test in ['kaboing.bla.bay.livefilestore.com','yolo.doener.com','blubb.co.uk','bloing.bazinga', 'co.uk']:
         print "'%s' -> '%s'"%(test,t.get_tld(test))
     
