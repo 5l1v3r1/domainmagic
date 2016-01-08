@@ -8,7 +8,7 @@ from domainmagic.extractor import URIExtractor,fqdn_from_uri
 class Extractor(unittest.TestCase):
     def setUp(self):
         self.candidate=URIExtractor()
-        URIExtractor.skiplist=['skipme.com']
+        self.candidate.skiplist=['skipme.com']
     
     def tearDown(self):
         pass

@@ -111,30 +111,26 @@ def fqdn_from_uri(uri):
 class URIExtractor(object):
     """Extract URIs"""
 
-    searchre = None
-    emailre = None
-    skiplist = []
-    maxregexage=86400 #rebuild search regex once a day so we get new tlds
     
     def __init__(self,tldlist=None):
         #TODO: skiplist
         self.tldlist=tldlist
         self.lastreload=time.time()
         self.lastreloademail=time.time()
-        if URIExtractor.searchre==None:
-            URIExtractor.searchre=build_search_re(self.tldlist)
-        if URIExtractor.emailre==None:
-            URIExtractor.emailre=build_email_re(self.tldlist)
         self.logger=logging.getLogger('uriextractor')
+        self.searchre = build_search_re(self.tldlist)
+        self.emailre = build_email_re(self.tldlist)
+        self.skiplist = []
+        self.maxregexage=86400 #rebuild search regex once a day so we get new tlds
 
     def set_tld_list(self,tldlist):
         """override the tldlist and rebuild the search regex"""
-        URIExtractor.searchre=build_search_re(self.tldlist)
-        URIExtractor.emailre=build_email_re(self.tldlist)
+        self.searchre=build_search_re(self.tldlist)
+        self.emailre=build_email_re(self.tldlist)
 
         
     def load_skiplist(self,filename):
-        URIExtractor.skiplist = self._load_single_file(filename)
+        self.skiplist = self._load_single_file(filename)
     
     def _load_single_file(self,filename):
         """return lowercased list of unique entries"""
@@ -147,16 +143,16 @@ class URIExtractor(object):
         return set(entries)
         
     def extracturis(self,plaintext):
-        if self.tldlist==None and time.time()-self.lastreload>URIExtractor.maxregexage:
+        if self.tldlist==None and time.time()-self.lastreload>self.maxregexage:
             self.lastreload=time.time()
             self.logger.debug("Rebuilding search regex with latest TLDs")
             try:
-                URIExtractor.searchre=build_search_re()
+                self.searchre=build_search_re()
             except Exception,e:
                 self.logger.error("Rebuilding search re failed: %s"%traceback.format_exc())
 
         uris=[]
-        uris.extend(re.findall(URIExtractor.searchre, plaintext))
+        uris.extend(re.findall(self.searchre, plaintext))
         
         finaluris=[]
         #check skiplist$
@@ -173,7 +169,7 @@ class URIExtractor(object):
                 continue
 
             skip=False
-            for skipentry in URIExtractor.skiplist:
+            for skipentry in self.skiplist:
                 if domain==skip or domain.endswith(".%s"%skipentry):
                     skip=True
                     break
@@ -187,16 +183,16 @@ class URIExtractor(object):
         return sorted(set(finaluris))
 
     def extractemails(self,plaintext):
-        if time.time()-self.lastreloademail>URIExtractor.maxregexage:
+        if time.time()-self.lastreloademail>self.maxregexage:
             self.lastreloademail=time.time()
             self.logger.debug("Rebuilding search regex with latest TLDs")
             try:
-                URIExtractor.emailre=build_email_re()
+                self.emailre=build_email_re()
             except Exception,e:
                 self.logger.error("Rebuilding email search re failed: %s"%traceback.format_exc())
                 
         emails=[]
-        emails.extend(re.findall(URIExtractor.emailre, plaintext))
+        emails.extend(re.findall(self.emailre, plaintext))
         return sorted(set(emails))
 
 if __name__=='__main__':
