@@ -62,7 +62,7 @@ class RBLProviderBase(object):
 
     def make_lookup(self,transform):
         """some bls require additional modifications, even after input transformation, eg. ips must be reversed...
-        by default we just remove trailing dots
+        by default we just fix trailing dots
         """
         return add_trailing_dot(transform)+self.rbldomain
 
@@ -116,8 +116,8 @@ class BitmaskedRBLProvider(RBLProviderBase):
                 listings.append((identifier,desc),)
         return listings
 
-class ReverseIPMixin():
-    """Direct lookups on IP Blacklists"""
+class ReverseIPLookup():
+    """IP lookups require reversed question"""
     
     def make_lookup(self,transform):
         if is_ip(transform):
@@ -125,7 +125,7 @@ class ReverseIPMixin():
         else:
             return add_trailing_dot(transform)+self.rbldomain
      
-class StandardURIBLProvider(BitmaskedRBLProvider,ReverseIPMixin):
+class StandardURIBLProvider(ReverseIPLookup, BitmaskedRBLProvider):
     """This is the most commonly used rbl provider (uribl, surbl)
      - domains are A record lookups example.com.rbldomain.com 
      - results are bitmasked  
@@ -228,9 +228,7 @@ class RBLLookup(object):
             'a-bitmask':BlackAProvider,
             'email-bitmask':EmailBLProvider,
         }
-        #TODO: if we ever encounter fixed result rbls for ns/a we extend den from RBLProviderBase and 
-        #move the current ones to use ReverseIPMixin
-   
+        #TODO: if we ever encounter fixed result rbls for ns/a we extend den from RBLProviderBase and
         
     def from_config(self,filepath=None):
         self.logger.debug('loading rbl lookups from file %s'%filepath)
@@ -308,9 +306,9 @@ class RBLLookup(object):
 
     
 if __name__=='__main__':
-    #logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG)
     rbl=RBLLookup()
-    rbl.from_config('/home/gryphius/rbllookup.conf')
+    rbl.from_config('/home/gryphius/workspace/cmbl2/gui2/conf/rbl.conf')
     
     import sys
     if len(sys.argv)<2:
