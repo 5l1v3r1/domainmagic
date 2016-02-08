@@ -133,6 +133,21 @@ class StandardURIBLProvider(ReverseIPLookup, BitmaskedRBLProvider):
     """
     pass
 
+class BitmaskedIPOnlyProvider(StandardURIBLProvider):
+    """ ip only lookups
+    lookups are reversed (inherited from StandardURIBLProvider)
+    """
+    def accept_input(self,value):
+        return is_ip(value)
+
+
+class FixedResultIPOnlyProvider(ReverseIPLookup, RBLProviderBase):
+    """ ip only lookups, like zen
+    lookups are reversed (inherited from StandardURIBLProvider)
+    """
+    def accept_input(self,value):
+        return is_ip(value)
+
 
 class BlackNSNameProvider(StandardURIBLProvider):
     """Nameserver Name Blacklists"""
@@ -222,13 +237,14 @@ class RBLLookup(object):
 
         self.providermap={
             'uri-bitmask':StandardURIBLProvider,
+            'ip-bitmask':BitmaskedIPOnlyProvider,
+            'ip-fixed':FixedResultIPOnlyProvider,
             'domain-fixed':FixedResultDomainProvider,
             'nsip-bitmask':BlackNSIPProvider,
             'nsname-bitmask':BlackNSNameProvider,
             'a-bitmask':BlackAProvider,
             'email-bitmask':EmailBLProvider,
         }
-        #TODO: if we ever encounter fixed result rbls for ns/a we extend den from RBLProviderBase and
         
     def from_config(self,filepath=None):
         self.logger.debug('loading rbl lookups from file %s'%filepath)
