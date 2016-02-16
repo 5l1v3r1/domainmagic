@@ -149,6 +149,19 @@ class FixedResultIPOnlyProvider(ReverseIPLookup, RBLProviderBase):
         return is_ip(value)
 
 
+def valid_host_names(lookupresult):
+    """return a list of valid host names from a  lookup result
+    """
+    validnames = set()
+    for rec in lookupresult:
+        content = rec.content
+        content=remove_trailing_dot(content)
+        if is_hostname(content,check_valid_tld=True):
+            validnames.add(content)
+    validnames=list(validnames)
+    return validnames
+
+
 class BlackNSNameProvider(StandardURIBLProvider):
     """Nameserver Name Blacklists"""
     def __init__(self,rbldomain):
@@ -159,8 +172,8 @@ class BlackNSNameProvider(StandardURIBLProvider):
         ret=[]
         try:
             nsrecords=self.resolver.lookup(value,'NS')
-            nsnames=[record.content for record in nsrecords if is_hostname(record.content,check_valid_tld=True)]
-            return nsnames
+            return valid_host_names(nsrecords)
+
         except Exception,e:
             self.logger.warn("Exception in getting ns names: %s"%str(e))
         
@@ -177,7 +190,7 @@ class BlackNSIPProvider(StandardURIBLProvider):
         ret=[]
         try:
             nsnamerecords=self.resolver.lookup(value,'NS')
-            nsnames=[record.content for record in nsnamerecords  if is_hostname(record.content,check_valid_tld=True)]
+            nsnames=valid_host_names(nsnamerecords)
             nsiprecords=self.resolver.lookup_multi(nsnames,'A').values()
             nsips=[]
             for recordlist in nsiprecords:
