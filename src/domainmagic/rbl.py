@@ -322,19 +322,18 @@ class RBLLookup(object):
 
     
 if __name__=='__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    rbl=RBLLookup()
-    rbl.from_config('/home/gryphius/workspace/cmbl2/gui2/conf/rbl.conf')
-    
     import sys
-    if len(sys.argv)<2:
-        print "usage: rbl <something> [-debug]"
+    if len(sys.argv)<3:
+        print "usage: rbl </path/to/rbl.conf> <domain> [-debug]"
         sys.exit(1)
-    
+
+    rbl=RBLLookup()
+    rbl.from_config(sys.argv[1])
+
     if '-debug' in sys.argv:
         logging.basicConfig(level=logging.DEBUG)
     
-    query=sys.argv[1]
+    query=sys.argv[2]
     
     start=time.time()
     ans=rbl.listings(query)
