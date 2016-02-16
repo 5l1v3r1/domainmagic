@@ -37,13 +37,13 @@ class RBLProviderBase(object):
         
         if identifier==None:
             identifier=self.rbldomain
-        
+
         self.replycodes[mask]=identifier
     
     def _listed_identifiers(self,input,transform,dnsresult):
         listings=[]
         for code,identifier in self.replycodes.items():
-            if dnsresult == code:
+            if dnsresult == "%s"%code or dnsresult=="127.0.0.%s"%code:
                 listings.append((identifier,self.make_description(input=input,dnsresult=dnsresult,transform=transform,identifier=identifier,replycode=code)))
         return listings
 
