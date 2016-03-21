@@ -77,6 +77,8 @@ class DNSLookup(object):
             self.logger.debug("query %s/%s completed -> %s"%(question,qtype,resolveranswer.rrset))
         except resolver.NXDOMAIN:
             pass
+        except resolver.NoAnswer:
+            pass
         except Exception,e:
             #TODO: some dnspython exceptions don't have a description - maybe add the full stack?
             self.logger.warning("dnslookup %s/%s failed: %s: %s"%(question,qtype,e.__class__.__name__,str(e)))
