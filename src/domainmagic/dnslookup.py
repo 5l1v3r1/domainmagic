@@ -79,7 +79,7 @@ class DNSLookup(object):
             pass
         except Exception,e:
             #TODO: some dnspython exceptions don't have a description - maybe add the full stack?
-            self.logger.warning("dnslookup %s/%s failed: %s"%(question,qtype,str(e)))
+            self.logger.warning("dnslookup %s/%s failed: %s: %s"%(question,qtype,e.__class__.__name__,str(e)))
         finally:
             DNSLookup.semaphore.release()
             
