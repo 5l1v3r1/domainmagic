@@ -1,4 +1,5 @@
 from tasker import *
+from tld import get_default_tldmagic
 import logging
 from dnslookup import DNSLookup
 from ip import ip_reversed
@@ -231,18 +232,18 @@ class SOAEmailProvider(StandardURIBLProvider):
         try:
             soaemails=[]
             soarecords=self.resolver.lookup(value,'SOA')
+            if len(soarecords)==0:
+                soarecords=self.resolver.lookup(get_default_tldmagic().get_domain(value),'SOA')
             for rec in soarecords:
                 parts = rec.content.split()
                 if len(parts)!=7:
                     continue
-                email=parts[1]
-                if email.endswith('.'):
-                    email=email[:-1]
+                email=remove_trailing_dot(parts[1])
                 soaemails.append(email)
 
             return soaemails
         except Exception,e:
-            self.logger.warn("Exception on SOA record lookup: %s"%str(e))
+            self.logger.warn("%s on SOA record lookup: %s"%(e.__class__.__name__,str(e)))
         return []
 
 class EmailBLProvider(StandardURIBLProvider):
