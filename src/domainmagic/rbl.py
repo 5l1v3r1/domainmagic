@@ -221,6 +221,30 @@ class BlackAProvider(StandardURIBLProvider):
         
         return []
 
+class SOAEmailProvider(StandardURIBLProvider):
+    """Black SOA Email"""
+    def __init__(self,rbldomain):
+        StandardURIBLProvider.__init__(self, rbldomain)
+        self.descriptiontemplate="${input}'s SOA email ${transform} is listed on ${rbldomain} (${identifier})"
+
+    def transform_input(self,value):
+        try:
+            soaemails=[]
+            soarecords=self.resolver.lookup(value,'SOA')
+            for rec in soarecords:
+                parts = rec.content.split()
+                if len(parts)!=7:
+                    continue
+                email=parts[1]
+                if email.endswith('.'):
+                    email=email[:-1]
+                soaemails.append(email)
+
+            return soaemails
+        except Exception,e:
+            self.logger.warn("Exception on SOA record lookup: %s"%str(e))
+        return []
+
 class EmailBLProvider(StandardURIBLProvider):
     def accept_input(self,value):
         return '@' in value #simplest email validation ever ;-)
@@ -257,6 +281,7 @@ class RBLLookup(object):
             'nsname-bitmask':BlackNSNameProvider,
             'a-bitmask':BlackAProvider,
             'email-bitmask':EmailBLProvider,
+            'soaemail-bitmask':SOAEmailProvider,
         }
         
     def from_config(self,filepath=None):
