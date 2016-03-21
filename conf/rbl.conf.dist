@@ -9,6 +9,8 @@
 #  * nsname-bitmask for ns name lookups
 #  * a-bitmask for A record lookups
 #  * email-bitmask emailbl lookup (md5)
+#  * soaemail-bitmask SOA record email address lookup
+
 # <lookupdomain> is the rbl domain, eg. multi.uribl.com
 # <bitmask> is the bitmask or in the case of 'domain-fixed' the fixed result
 # <identifer> is the identifier which should be returned to the client when the blacklist hits
