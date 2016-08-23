@@ -5,12 +5,12 @@ try:
 except ImportError:
     from distutils import setup
 
-from domainmagic import VERSION
+from domainmagic import __version__
 import glob
 
 
 setup(name = "domainmagic",
-    version = VERSION,
+    version = __version__,
     description = "Python library for all sorts of domain lookup related tuff (rbl lookups, extractors etc)",
     author = "O. Schacher",
     url='',
