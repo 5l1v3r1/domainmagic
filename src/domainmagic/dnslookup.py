@@ -60,7 +60,7 @@ class DNSLookup(object):
         self.resolver.timeout = timeout   # timeout for a individual request before retrying
         self.resolver.lifetime = lifetime  # max time for a request
 
-        self.logger = logging.getLogger("dnslookup")
+        self.logger = logging.getLogger("%s.dnslookup" % __package__)
 
     def lookup(self, question, qtype='A'):
         """lookup one record returns a list of DNSLookupResult"""

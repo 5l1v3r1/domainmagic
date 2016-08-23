@@ -34,7 +34,7 @@ class RBLProviderBase(object):
     def __init__(self, rbldomain):
         self.replycodes = {}
         self.rbldomain = rbldomain
-        self.logger = logging.getLogger('rbllookup.%s' % self.rbldomain)
+        self.logger = logging.getLogger('%s.rbllookup.%s' % (__package__, self.rbldomain))
         self.resolver = DNSLookup()
         self.descriptiontemplate = "${input} is listed on ${rbldomain} (${identifier})"
 
@@ -322,7 +322,7 @@ class FixedResultDomainProvider(RBLProviderBase):
 class RBLLookup(object):
 
     def __init__(self):
-        self.logger = logging.getLogger('rbllookup')
+        self.logger = logging.getLogger('%s.rbllookup' % __package__)
         self.providers = []
         self.resolver = DNSLookup()
 
