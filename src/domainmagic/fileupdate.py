@@ -126,13 +126,16 @@ class FileUpdater(object):
 
 
 
-fileupdater = FileUpdater()
-
+fileupdater = None
 
 def updatefile(local_path, update_url, **kwargs):
     """decorator which automatically downlads/updates required files
     see fileupdate.Fileupdater.add_file() for possible arguments
     """
+    global fileupdater
+    if fileupdater is None:
+        fileupdater = FileUpdater()
+    
     force_recent = False
     
     if 'force_recent' in kwargs:
