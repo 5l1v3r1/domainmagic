@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 import logging
 import threading
 import time
@@ -6,6 +7,8 @@ import tempfile
 import urllib2
 import thread
 import zlib
+
+
 
 class FileTooSmallException(Exception):
     pass
@@ -120,11 +123,38 @@ class FileUpdater(object):
                     self.update_in_thread(local_path)
         else:
             self.update(local_path)
+
+
+
+fileupdater = FileUpdater()
+
+
+def updatefile(local_path, update_url, **kwargs):
+    """decorator which automatically downlads/updates required files
+    see fileupdate.Fileupdater.add_file() for possible arguments
+    """
+    force_recent = False
+    
+    if 'force_recent' in kwargs:
+        force_recent = True
+        del kwargs['force_recent']
+    fileupdater.add_file(local_path, update_url, **kwargs)
+    
+    def wrap(f):
+        def wrapped_f(*args, **kwargs):
+            fileupdater.wait_for_file(local_path, force_recent)
+            return f(*args, **kwargs)
+        
+        return wrapped_f
+    
+    return wrap
+
+
+
         
 
 if __name__=='__main__':
     logging.basicConfig(level=logging.DEBUG)
-    updater=FileUpdater()
-    updater.add_file("/tmp/tldalpha.txt", "http://data.iana.org/TLD/tlds-alpha-by-domain.txt", 10, 1000)
-    updater.wait_for_file("/tmp/tldalpha.txt", True)
+    fileupdater.add_file("/tmp/tldalpha.txt", "http://data.iana.org/TLD/tlds-alpha-by-domain.txt", 10, 1000)
+    fileupdater.wait_for_file("/tmp/tldalpha.txt", True)
     

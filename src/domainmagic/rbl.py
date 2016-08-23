@@ -1,4 +1,5 @@
-from tasker import *
+# -*- coding: UTF-8 -*-
+from tasker import TaskGroup, get_default_threadpool
 from tld import get_default_tldmagic
 import logging
 from dnslookup import DNSLookup
@@ -8,6 +9,9 @@ import re
 from string import Template
 import os
 import hashlib
+import time
+
+
 
 def remove_trailing_dot(input):
     """if input ends with a dot, remove it"""
@@ -28,7 +32,7 @@ class RBLProviderBase(object):
     def __init__(self,rbldomain):
         self.replycodes={}
         self.rbldomain=rbldomain
-        self.logger=logging.getLogger('cmbl.rbllookup.%s'%self.rbldomain)
+        self.logger=logging.getLogger('rbllookup.%s'%self.rbldomain)
         self.resolver=DNSLookup()
         self.descriptiontemplate="${input} is listed on ${rbldomain} (${identifier})"
 
@@ -117,7 +121,7 @@ class BitmaskedRBLProvider(RBLProviderBase):
                 listings.append((identifier,desc),)
         return listings
 
-class ReverseIPLookup():
+class ReverseIPLookup(object):
     """IP lookups require reversed question"""
     
     def make_lookup(self,transform):
@@ -269,7 +273,7 @@ class FixedResultDomainProvider(RBLProviderBase):
 
 class RBLLookup(object):
     def __init__(self):
-        self.logger=logging.getLogger('cmbl.rbllookup')
+        self.logger=logging.getLogger('rbllookup')
         self.providers=[]
         self.resolver=DNSLookup()
 
@@ -341,13 +345,15 @@ class RBLLookup(object):
             tg=TaskGroup()
             for provider in self.providers:
                 tg.add_task(provider.listed, (domain,), )
-            get_default_threadpool().add_task(tg)
+            threadpool = get_default_threadpool()
+            threadpool.add_task(tg)
             tg.join(timeout)
     
             for task in tg.tasks:
                 if task.done:
                     for identifier,humanreadable in task.result:
                         listed[identifier]=humanreadable
+            threadpool.stayalive = False
         else:
             for provider in self.providers:
                 for identifier,humanreadable in provider.listed(domain):
@@ -356,7 +362,6 @@ class RBLLookup(object):
                         return listed
 
         return listed.copy()
-
 
 
     
@@ -371,6 +376,7 @@ if __name__=='__main__':
 
     if '-debug' in sys.argv:
         logging.basicConfig(level=logging.DEBUG)
+        
     
     query=sys.argv[2]
     

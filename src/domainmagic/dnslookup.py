@@ -1,9 +1,9 @@
-import thread
+# -*- coding: UTF-8 -*-
 import threading
 from dns import resolver
 from dns.rdatatype import to_text as rdatatype_to_text
  
-from tasker import get_default_threadpool,Task,TaskGroup,TimeOut
+from tasker import get_default_threadpool,TaskGroup,TimeOut
 import time
 import logging
 
@@ -42,8 +42,6 @@ def _make_results(question,qtype,resolveranswer):
 
 
 class DNSLookup(object):
-    threadpool=None
-    
     MAX_PARALLEL_REQUESTS=100
     
     semaphore=threading.Semaphore(MAX_PARALLEL_REQUESTS)
@@ -97,16 +95,16 @@ class DNSLookup(object):
         """lookup a list of multiple records of the same qtype. the lookups will be done in parallel
         returns a dict question->[list of DNSLookupResult]
         """
+        
         tg=TaskGroup()
         for question in questions:
             tg.add_task(self.lookup,args=(question,qtype))
         
-        if self.threadpool==None:
-            self.threadpool=get_default_threadpool()
-        self.threadpool.add_task(tg)
+        threadpool=get_default_threadpool()
+        threadpool.add_task(tg)
         
         try:
-            tg.join(10)
+            tg.join(timeout)
         except TimeOut:
             self.logger.warn('timeout in lookup_multi')
             pass
@@ -119,6 +117,7 @@ class DNSLookup(object):
                 self.logger.warn( "hanging lookup: %s"%task)
 
         #print "lookup multi, questions=%s, qtype=%s , result=%s"%(questions,qtype,result)
+        threadpool.stayalive = False
         
         return result
         

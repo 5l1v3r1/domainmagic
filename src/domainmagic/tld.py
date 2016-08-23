@@ -1,8 +1,9 @@
-
-from domainmagic import updatefile
+# -*- coding: UTF-8 -*-
 from util import dict_update,dict_path,list_to_dict
-import collections
 import re
+from fileupdate import updatefile
+
+
 
 
 @updatefile('/tmp/tlds-alpha-by-domain.txt','http://data.iana.org/TLD/tlds-alpha-by-domain.txt',minimum_size=1000,refresh_time=86400,force_recent=True)
@@ -16,12 +17,11 @@ def get_IANA_TLD_list():
     return list(sorted(tlds))
 
 
-global default_tldmagic
 default_tldmagic=None
 
 def get_default_tldmagic():
     global default_tldmagic
-    if default_tldmagic==None:
+    if default_tldmagic is None:
         default_tldmagic=TLDMagic()
     return default_tldmagic
 

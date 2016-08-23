@@ -1,7 +1,8 @@
+# -*- coding: UTF-8 -*-
 """ip tools"""
 
-from domainmagic.validators import is_ipv4,is_ipv6
-from domainmagic import updatefile
+from validators import is_ipv4,is_ipv6
+from fileupdate import updatefile
 
 try:
     import pygeoip

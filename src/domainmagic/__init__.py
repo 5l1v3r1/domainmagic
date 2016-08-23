@@ -1,30 +1,11 @@
-from fileupdate import FileUpdater
+# -*- coding: UTF-8 -*-
+__version__="0.0.6"
+  
 
-VERSION="0.0.5"
-
-
-fileupdater=FileUpdater()
-def updatefile(local_path,update_url,**kwargs):
-    """decorator which automatically downlads/updates required files
-    see fileupdate.Fileupdater.add_file() for possible arguments
-    """
-    force_recent=False
-    
-    if 'force_recent' in kwargs:
-        force_recent=True
-        del kwargs['force_recent']
-    fileupdater.add_file(local_path,update_url,**kwargs)
-    
-    def wrap(f):
-        def wrapped_f(*args,**kwargs):
-            fileupdater.wait_for_file(local_path,force_recent)
-            return f(*args,**kwargs)
-        return wrapped_f
-    return wrap
 
 def check_installation():
     """check dependencies , returns a list of problems"""
-    problems=[]
+    problems = []
     
     from domainmagic.ip import PYGEOIP_AVAILABLE
     
@@ -37,4 +18,3 @@ def check_installation():
         problems.append("dnspython is not installed")
     
     return problems
- 
