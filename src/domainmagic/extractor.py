@@ -122,7 +122,7 @@ class URIExtractor(object):
         self.tldlist = tldlist
         self.lastreload = time.time()
         self.lastreloademail = time.time()
-        self.logger = logging.getLogger('uriextractor')
+        self.logger = logging.getLogger('%s.uriextractor' % __package__)
         self.searchre = build_search_re(self.tldlist)
         self.emailre = build_email_re(self.tldlist)
         self.skiplist = []

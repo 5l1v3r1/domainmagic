@@ -11,7 +11,7 @@ import glob
 
 setup(name = "domainmagic",
     version = __version__,
-    description = "Python library for all sorts of domain lookup related tuff (rbl lookups, extractors etc)",
+    description = "Python library for all sorts of domain lookup related stuff (rbl lookups, extractors etc)",
     author = "O. Schacher",
     url='',
     author_email = "oli@wgwh.ch",
@@ -21,7 +21,7 @@ setup(name = "domainmagic",
         'dnspython',
         'pygeoip',
     ],
-    long_description = """Python library for all sorts of domain lookup related tuff (rbl lookups, extractors etc)""" ,
+    long_description = """Python library for all sorts of domain lookup related stuff (rbl lookups, extractors etc)""" ,
     data_files=[
                ('/etc/domainmagic',glob.glob('conf/*.dist')),
     ]

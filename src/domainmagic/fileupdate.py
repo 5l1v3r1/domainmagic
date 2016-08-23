@@ -27,7 +27,7 @@ class FileUpdater(object):
          'minimum_size': 0,
         }
         self.filedict = {}
-        self.logger = logging.getLogger('fileupdater')
+        self.logger = logging.getLogger('%s.fileupdater' % __package__)
 
     def add_file(
         self,
