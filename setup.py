@@ -13,7 +13,7 @@ setup(name = "domainmagic",
     version = __version__,
     description = "Python library for all sorts of domain lookup related stuff (rbl lookups, extractors etc)",
     author = "O. Schacher",
-    url='',
+    url='https://github.com/gryphius/domainmagic',
     author_email = "oli@wgwh.ch",
     package_dir={'':'src'},
     packages = ['domainmagic',],
@@ -24,5 +24,9 @@ setup(name = "domainmagic",
     long_description = """Python library for all sorts of domain lookup related stuff (rbl lookups, extractors etc)""" ,
     data_files=[
                ('/etc/domainmagic',glob.glob('conf/*.dist')),
-    ]
+    ],
+    classifiers=[
+          'Development Status :: 3 - Alpha',
+          'Topic :: Internet :: Name Service (DNS)',
+    ],
 ) 
