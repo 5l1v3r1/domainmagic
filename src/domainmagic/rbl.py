@@ -67,7 +67,7 @@ class RBLProviderBase(object):
         return template.safe_substitute(values)
 
     def accept_input(self, value):
-        return re.match("^[a-zA-Z0-9.-]+$", value) is not None
+        return re.match("^[a-zA-Z0-9.-]{2,256}$", value) is not None
 
     def transform_input(self, value):
         """transform input, eg, look up records or make md5 hashes here or whatever is needed for your specific provider and return a list of transformed values"""

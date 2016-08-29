@@ -35,7 +35,7 @@ def load_tld_file(filename):
             if tld.startswith('.'):
                 tld = tld[1:]
             tld = tld.lower()
-            if re.match('^[a-z0-9\-\.]+$', tld):
+            if re.match('^[a-z0-9\-\.]{2,64}$', tld):
                 if tld not in retval:
                     retval.append(tld)
     return retval
