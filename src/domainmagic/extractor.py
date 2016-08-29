@@ -106,7 +106,7 @@ def fqdn_from_uri(uri):
     fqdn = urlparse.urlparse(uri.lower()).netloc
 
     # remove port
-    portmatch = re.search('\:\d+$', fqdn)
+    portmatch = re.search('\:\d{1,5}$', fqdn)
     if portmatch is not None:
         fqdn = fqdn[:portmatch.span()[0]]
 
