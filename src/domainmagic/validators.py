@@ -5,7 +5,7 @@ import re
 
 REGEX_IPV4 = """(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"""
 
-REGEX_CIDRV4 = REGEX_IPV4 + """\/(?:1?[0-9]|2[0-4])"""
+REGEX_CIDRV4 = REGEX_IPV4 + """\/(?:[012]?[0-9]|3[0-2])"""
 
 # from http://stackoverflow.com/questions/53497/regular-expression-that-matches-valid-ipv6-addresses
 # with added dot escapes and removed capture groups
