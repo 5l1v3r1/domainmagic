@@ -5,7 +5,6 @@ import time
 import os
 import tempfile
 import urllib2
-import thread
 import zlib
 
 
@@ -109,7 +108,7 @@ class FileUpdater(object):
             self.logger.debug("%s - lock released" % local_path)
 
     def update_in_thread(self, local_path, force=False):
-        thread.start_new_thread(self.update, (local_path, force),)
+        threading.Thread(target=self.update, args=(local_path, force)).start()
 
     def wait_for_file(self, local_path, force_recent=False):
         """make sure file :localpath exists locally.
