@@ -106,7 +106,7 @@ def fqdn_from_uri(uri):
     fqdn = urlparse.urlparse(uri.lower()).netloc
 
     # remove port
-    portmatch = re.search('\:\d{1,5}$', fqdn)
+    portmatch = re.search(':\d{1,5}$', fqdn)
     if portmatch is not None:
         fqdn = fqdn[:portmatch.span()[0]]
 
@@ -130,8 +130,9 @@ class URIExtractor(object):
 
     def set_tld_list(self, tldlist):
         """override the tldlist and rebuild the search regex"""
-        self.searchre = build_search_re(self.tldlist)
-        self.emailre = build_email_re(self.tldlist)
+        self.tldlist = tldlist
+        self.searchre = build_search_re(tldlist)
+        self.emailre = build_email_re(tldlist)
 
     def load_skiplist(self, filename):
         self.skiplist = self._load_single_file(filename)
@@ -152,7 +153,7 @@ class URIExtractor(object):
             self.logger.debug("Rebuilding search regex with latest TLDs")
             try:
                 self.searchre = build_search_re()
-            except Exception as e:
+            except Exception:
                 self.logger.error(
                     "Rebuilding search re failed: %s" %
                     traceback.format_exc())
@@ -195,7 +196,7 @@ class URIExtractor(object):
             self.logger.debug("Rebuilding search regex with latest TLDs")
             try:
                 self.emailre = build_email_re()
-            except Exception as e:
+            except Exception:
                 self.logger.error(
                     "Rebuilding email search re failed: %s" %
                     traceback.format_exc())
