@@ -24,18 +24,12 @@ class FileUpdater(object):
         # - lock (threading.Lock object, created by add_file)
         self.defaults = {
             'refresh_time': 86400,
-         'minimum_size': 0,
+            'minimum_size': 0,
         }
         self.filedict = {}
         self.logger = logging.getLogger('%s.fileupdater' % __package__)
 
-    def add_file(
-        self,
-        local_path,
-     update_url,
-     refresh_time=None,
-     minimum_size=None,
-     unpack=False):
+    def add_file(self, local_path, update_url, refresh_time=None, minimum_size=None, unpack=False):
         valdict = dict()
         valdict['refresh_time'] = refresh_time or self.defaults['refresh_time']
         valdict['minimum_size'] = minimum_size or self.defaults['minimum_size']
@@ -104,7 +98,11 @@ class FileUpdater(object):
             fd = os.fdopen(handle, 'w')
             fd.write(content)
             fd.close()
-            os.rename(tmpfilename, local_path)
+            try:
+                os.rename(tmpfilename, local_path)
+            except OSError:
+                if os.path.exists(tmpfilename):
+                    os.remove(tmpfilename)
 
         finally:
             self.filedict[local_path]['lock'].release()
