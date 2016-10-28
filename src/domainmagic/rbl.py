@@ -31,11 +31,11 @@ class RBLProviderBase(object):
 
     """Baseclass for all rbl providers"""
 
-    def __init__(self, rbldomain):
+    def __init__(self, rbldomain, timeout=3, lifetime=10):
         self.replycodes = {}
         self.rbldomain = rbldomain
         self.logger = logging.getLogger('%s.rbllookup.%s' % (__package__, self.rbldomain))
-        self.resolver = DNSLookup()
+        self.resolver = DNSLookup(timeout, lifetime)
         self.descriptiontemplate = "${input} is listed on ${rbldomain} (${identifier})"
 
     def add_replycode(self, mask, identifier=None):
@@ -144,7 +144,7 @@ class BitmaskedRBLProvider(RBLProviderBase):
         return listings
 
 
-class ReverseIPLookup(object):
+class ReverseIPLookup(RBLProviderBase):
 
     """IP lookups require reversed question"""
 
@@ -321,10 +321,10 @@ class FixedResultDomainProvider(RBLProviderBase):
 
 class RBLLookup(object):
 
-    def __init__(self):
+    def __init__(self, timeout=3, lifetime=10):
         self.logger = logging.getLogger('%s.rbllookup' % __package__)
         self.providers = []
-        self.resolver = DNSLookup()
+        self.resolver = DNSLookup(timeout, lifetime)
 
         self.providermap = {
             'uri-bitmask': StandardURIBLProvider,
@@ -404,7 +404,11 @@ class RBLLookup(object):
                         listed[identifier] = humanreadable
             threadpool.stayalive = False
         else:
+            starttime = time.time()
             for provider in self.providers:
+                if time.time() - starttime > timeout:
+                    break
+                
                 for identifier, humanreadable in provider.listed(domain):
                     listed[identifier] = humanreadable
                     if abort_on_hit:

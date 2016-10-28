@@ -48,11 +48,11 @@ def is_ip(content):
 
 
 def is_hostname(content, check_valid_tld=False):
-    if re.match(REGEX_HOSTNAME, content) is None:
+    if not _apply_rgx(REGEX_HOSTNAME, content):
         return False
 
     if check_valid_tld:
-        from .tld import get_default_tldmagic
+        from domainmagic.tld import get_default_tldmagic
         return get_default_tldmagic().get_tld(content) is not None
 
     return True
