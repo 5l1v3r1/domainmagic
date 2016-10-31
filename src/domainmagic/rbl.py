@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+from __future__ import print_function
 from tasker import TaskGroup, get_default_threadpool
 from tld import get_default_tldmagic
 import logging
@@ -94,7 +95,7 @@ class RBLProviderBase(object):
 
             multidnsresult = self.resolver.lookup_multi(lookup_to_trans.keys())
 
-            for lookup, arecordlist in multidnsresult.iteritems():
+            for lookup, arecordlist in multidnsresult.items():
                 if lookup not in lookup_to_trans:
                     self.logger.error(
                         "dns error: I asked for %s but got '%s' ?!" %
@@ -420,7 +421,7 @@ class RBLLookup(object):
 if __name__ == '__main__':
     import sys
     if len(sys.argv) < 3:
-        print "usage: rbl </path/to/rbl.conf> <domain> [-debug]"
+        print("usage: rbl </path/to/rbl.conf> <domain> [-debug]")
         sys.exit(1)
 
     rbl = RBLLookup()
@@ -435,9 +436,9 @@ if __name__ == '__main__':
     ans = rbl.listings(query)
     end = time.time()
     diff = end - start
-    for identifier, explanation in ans.iteritems():
-        print "identifier '%s' because: %s" % (identifier, explanation)
+    for identifier, explanation in ans.items():
+        print("identifier '%s' because: %s" % (identifier, explanation))
 
-    print ""
-    print "execution time: %.4f" % diff
+    print("")
+    print("execution time: %.4f" % diff)
     sys.exit(0)

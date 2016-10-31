@@ -26,7 +26,7 @@ def dict_update(d, u):
     """add dict u into d changing leafnodes to dicts where necessary"""
     if not isinstance(d, collections.Mapping):
         d = {d: {}}
-    for k, v in u.iteritems():
+    for k, v in u.items():
         if isinstance(v, collections.Mapping):
             r = dict_update(d.get(k, {}), v)
             d[k] = r

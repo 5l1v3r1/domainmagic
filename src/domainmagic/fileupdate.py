@@ -4,8 +4,11 @@ import threading
 import time
 import os
 import tempfile
-import urllib2
 import zlib
+try:
+    from urllib2 import urlopen
+except ImportError:
+    from urllib.request import urlopen
 
 
 class FileTooSmallException(Exception):
@@ -96,7 +99,7 @@ class FileUpdater(object):
         try:
             # TODO: we could optimize here, if-modified-since for example
             update_url = self.filedict[local_path]['update_url']
-            response = urllib2.urlopen(update_url)
+            response = urlopen(update_url)
             content = response.read()
             content_len = len(content)
             self.logger.debug(
