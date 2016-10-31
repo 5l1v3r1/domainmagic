@@ -54,11 +54,31 @@ class FileUpdater(object):
             return False
 
         return self.file_age(local_path) < self.filedict[local_path]['refresh_time']
+    
+    def has_write_permission(self, local_path):
+        perm = True
+        if os.path.exists(local_path):
+            if not os.access(local_path, os.W_OK):
+                perm = False
+            else:
+                uid = os.getuid()
+                stats = os.stat(local_path)
+                if stats.st_uid != uid:
+                    perm = False
+        else:
+            dirname = os.path.dirname(local_path)
+            if not os.path.exists(dirname) or not os.access(dirname, os.W_OK):
+                perm = False
+        return perm
 
     def update(self, local_path, force=False):
         # if the file is current, do not update
         if self.is_recent(local_path) and not force:
             self.logger.debug("File %s is current - not updating" % local_path)
+            return
+        
+        if not self.has_write_permission(local_path):
+            self.logger.debug("Can't write file %s not updating" % local_path)
             return
 
         self.logger.debug("Updating %s - aquire lock" % local_path)
