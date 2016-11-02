@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+from __future__ import print_function
 from util import dict_update, dict_path, list_to_dict
 import re
 from fileupdate import updatefile
@@ -113,4 +114,4 @@ if __name__ == '__main__':
     t.add_tld('co.uk')
 
     for test in ['kaboing.bla.bay.livefilestore.com', 'yolo.doener.com', 'blubb.co.uk', 'bloing.bazinga', 'co.uk']:
-        print "'%s' -> '%s'" % (test, t.get_tld(test))
+        print("'%s' -> '%s'" % (test, t.get_tld(test)))

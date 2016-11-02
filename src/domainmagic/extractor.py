@@ -3,11 +3,13 @@ import re
 import os
 import time
 import logging
-import urlparse
-
 from tld import get_IANA_TLD_list
 from validators import REGEX_IPV4, REGEX_IPV6
 import traceback
+try:
+    import urlparse
+except ImportError:
+    from urllib import parse as urlparse
 
 
 def build_search_re(tldlist=None):
