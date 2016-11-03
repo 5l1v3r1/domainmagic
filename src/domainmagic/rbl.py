@@ -36,7 +36,7 @@ class RBLProviderBase(object):
         self.replycodes = {}
         self.rbldomain = rbldomain
         self.logger = logging.getLogger('%s.rbllookup.%s' % (__package__, self.rbldomain))
-        self.resolver = DNSLookup(timeout, lifetime)
+        self.resolver = DNSLookup(timeout=timeout, lifetime=lifetime)
         self.descriptiontemplate = "${input} is listed on ${rbldomain} (${identifier})"
 
     def add_replycode(self, mask, identifier=None):
@@ -110,7 +110,9 @@ class RBLProviderBase(object):
         else:
             for transform in transforms:
                 lookup = self.make_lookup(transform)
+                print(lookup)
                 arecordlist = self.resolver.lookup(lookup)
+                print(arecordlist)
                 for ipresult in arecordlist:
                     listings.extend(
                         self._listed_identifiers(
@@ -325,7 +327,7 @@ class RBLLookup(object):
     def __init__(self, timeout=3, lifetime=10):
         self.logger = logging.getLogger('%s.rbllookup' % __package__)
         self.providers = []
-        self.resolver = DNSLookup(timeout, lifetime)
+        self.resolver = DNSLookup(timeout=timeout, lifetime=lifetime)
 
         self.providermap = {
             'uri-bitmask': StandardURIBLProvider,
