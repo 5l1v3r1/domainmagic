@@ -81,7 +81,7 @@ class FileUpdater(object):
             return
         
         if not self.has_write_permission(local_path):
-            self.logger.debug("Can't write file %s not updating" % local_path)
+            self.logger.debug("Can't write file %s - not updating" % local_path)
             return
 
         self.logger.debug("Updating %s - aquire lock" % local_path)
