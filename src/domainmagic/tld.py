@@ -3,12 +3,14 @@ from __future__ import print_function
 from util import dict_update, dict_path, list_to_dict
 import re
 from fileupdate import updatefile
+import io
 
 
 @updatefile('/tmp/tlds-alpha-by-domain.txt', 'http://data.iana.org/TLD/tlds-alpha-by-domain.txt', minimum_size=1000, refresh_time=86400, force_recent=True)
 def get_IANA_TLD_list():
     tlds = []
-    content = open('/tmp/tlds-alpha-by-domain.txt').readlines()
+    with io.open('/tmp/tlds-alpha-by-domain.txt') as fp:
+        content = fp.readlines()
     for line in content:
         if line.strip() == '' or line.startswith('#'):
             continue

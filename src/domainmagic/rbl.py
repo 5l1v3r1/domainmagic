@@ -110,9 +110,7 @@ class RBLProviderBase(object):
         else:
             for transform in transforms:
                 lookup = self.make_lookup(transform)
-                print(lookup)
                 arecordlist = self.resolver.lookup(lookup)
-                print(arecordlist)
                 for ipresult in arecordlist:
                     listings.extend(
                         self._listed_identifiers(
@@ -205,8 +203,8 @@ class BlackNSNameProvider(StandardURIBLProvider):
 
     """Nameserver Name Blacklists"""
 
-    def __init__(self, rbldomain):
-        StandardURIBLProvider.__init__(self, rbldomain)
+    def __init__(self, rbldomain, timeout=3, lifetime=10):
+        StandardURIBLProvider.__init__(self, rbldomain, timeout=timeout, lifetime=lifetime)
         self.descriptiontemplate = "${input}'s NS name ${transform} is listed on ${rbldomain} (${identifier})"
 
     def transform_input(self, value):
@@ -225,8 +223,8 @@ class BlackNSIPProvider(StandardURIBLProvider):
 
     """Nameserver IP Blacklists"""
 
-    def __init__(self, rbldomain):
-        StandardURIBLProvider.__init__(self, rbldomain)
+    def __init__(self, rbldomain, timeout=3, lifetime=10):
+        StandardURIBLProvider.__init__(self, rbldomain, timeout=timeout, lifetime=lifetime)
         self.descriptiontemplate = "${input}'s NSIP ${transform} is listed on ${rbldomain} (${identifier})"
 
     def transform_input(self, value):
@@ -235,11 +233,13 @@ class BlackNSIPProvider(StandardURIBLProvider):
         try:
             nsnamerecords = self.resolver.lookup(value, 'NS')
             nsnames = valid_host_names(nsnamerecords)
-            nsiprecords = self.resolver.lookup_multi(nsnames, 'A').values()
-            nsips = []
-            for recordlist in nsiprecords:
-                nsips.extend([record.content for record in recordlist])
-            return set(nsips)
+            for nsname in nsnames:
+                arecords = self.resolver.lookup(nsname, 'A')
+                ips = [record.content for record in arecords]
+                for ip in ips:
+                    if not ip in ret:
+                        ret.append(ip)
+            
         except Exception as e:
             self.logger.warn("Exception in black ns ip lookup: %s" % str(e))
 
@@ -253,8 +253,8 @@ class BlackAProvider(StandardURIBLProvider):
 
     """A record blacklists"""
 
-    def __init__(self, rbldomain):
-        StandardURIBLProvider.__init__(self, rbldomain)
+    def __init__(self, rbldomain, timeout=3, lifetime=10):
+        StandardURIBLProvider.__init__(self, rbldomain, timeout=timeout, lifetime=lifetime)
         self.descriptiontemplate = "${input}'s A record ${transform} is listed on ${rbldomain} (${identifier})"
 
     def transform_input(self, value):
@@ -272,8 +272,8 @@ class SOAEmailProvider(StandardURIBLProvider):
 
     """Black SOA Email"""
 
-    def __init__(self, rbldomain):
-        StandardURIBLProvider.__init__(self, rbldomain)
+    def __init__(self, rbldomain, timeout=3, lifetime=10):
+        StandardURIBLProvider.__init__(self, rbldomain, timeout=timeout, lifetime=lifetime)
         self.descriptiontemplate = "${input}'s SOA email ${transform} is listed on ${rbldomain} (${identifier})"
 
     def transform_input(self, value):
@@ -328,6 +328,8 @@ class RBLLookup(object):
         self.logger = logging.getLogger('%s.rbllookup' % __package__)
         self.providers = []
         self.resolver = DNSLookup(timeout=timeout, lifetime=lifetime)
+        self.timeout = timeout
+        self.lifetime = lifetime
 
         self.providermap = {
             'uri-bitmask': StandardURIBLProvider,
@@ -349,7 +351,10 @@ class RBLLookup(object):
 
         providers = []
 
-        for line in open(filepath).readlines():
+        with open(filepath) as f:
+            lines = f.readlines()
+
+        for line in lines:
             line = line.strip()
             if line == '' or line.startswith('#'):
                 continue
@@ -361,12 +366,12 @@ class RBLLookup(object):
 
             providertype, searchdomain, resultconfig = parts
             if providertype not in self.providermap:
-                self.logger.error("unknown provider type %s" % (providertype))
+                self.logger.error("unknown provider type %s for %s" % (providertype, searchdomain))
                 continue
 
             providerclass = self.providermap[providertype]
 
-            providerinstance = providerclass(searchdomain)
+            providerinstance = providerclass(searchdomain, timeout=self.timeout, lifetime=self.lifetime)
             providerinstance.resolver = self.resolver
 
             # set bitmasks
@@ -409,13 +414,18 @@ class RBLLookup(object):
         else:
             starttime = time.time()
             for provider in self.providers:
-                if time.time() - starttime > timeout:
+                loopstarttime = time.time()
+                runtime = loopstarttime - starttime
+                if timeout > 0 and runtime > timeout:
+                    self.logger.info('lookups aborted after %.2fs due to timeout' % runtime)
                     break
                 
                 for identifier, humanreadable in provider.listed(domain):
                     listed[identifier] = humanreadable
                     if abort_on_hit:
-                        return listed
+                        return listed.copy()
+                
+                self.logger.debug('%s completed in %.2fs' % (provider.rbldomain, time.time()-loopstarttime))
 
         return listed.copy()
 
@@ -438,8 +448,8 @@ if __name__ == '__main__':
     ans = rbl.listings(query)
     end = time.time()
     diff = end - start
-    for identifier, explanation in ans.items():
-        print("identifier '%s' because: %s" % (identifier, explanation))
+    for ident, expl in ans.items():
+        print("identifier '%s' because: %s" % (ident, expl))
 
     print("")
     print("execution time: %.4f" % diff)
