@@ -1,11 +1,7 @@
-image: gryphius/centos6-with-git
+image: domainmagictestenv
 
 unittests:
   script:
-    - yum -q -y install python-setuptools python-nose pyOpenSSL
-    - easy_install -q pip
-    - pip install -q requests[security]
-    - pip install -q pygeoip dnspython
     - nosetests test
   only:
     - master
