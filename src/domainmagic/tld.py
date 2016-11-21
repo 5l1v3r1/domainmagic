@@ -30,7 +30,9 @@ def get_default_tldmagic():
 
 def load_tld_file(filename):
     retval = []
-    for line in open(filename, 'r').readlines():
+    with io.open(filename, 'r') as f:
+        lines = f.readlines()
+    for line in lines:
         if line.startswith('#') or line.strip() == '':
             continue
         tlds = line.split()

@@ -11,6 +11,7 @@ from string import Template
 import os
 import hashlib
 import time
+import io
 
 
 def remove_trailing_dot(input):
@@ -351,7 +352,7 @@ class RBLLookup(object):
 
         providers = []
 
-        with open(filepath) as f:
+        with io.open(filepath) as f:
             lines = f.readlines()
 
         for line in lines:
