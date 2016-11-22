@@ -1,8 +1,24 @@
 image: domainmagictestenv
 
+
+stages:
+  - test
+  - build
+
+
 unittests:
+  stage: test
   script:
     - nosetests test
   only:
     - master
 
+
+# define RSYNC_TARGET in gitlab -> project domainmagic -> settings -> variables
+
+buildrpm:
+  stage: build
+  script:
+    - if [ -n "${$RSYNC_TARGET}" ]; then python setup.py bdist_rpm > /dev/null && rsync -auz dist/domainmagic-*.noarch.rpm ${RSYNC_TARGET}; fi
+  only:
+    - master
