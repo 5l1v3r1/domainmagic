@@ -19,6 +19,6 @@ unittests:
 buildrpm:
   stage: build
   script:
-    - if [ -n "${$RSYNC_TARGET}" ]; then python setup.py bdist_rpm > /dev/null && rsync -auz dist/domainmagic-*.noarch.rpm ${RSYNC_TARGET}; fi
+    - if [ -n "${RSYNC_TARGET}" ]; then python setup.py bdist_rpm > /dev/null && rsync -auz dist/domainmagic-*.noarch.rpm ${RSYNC_TARGET}; fi
   only:
     - master
