@@ -1,4 +1,4 @@
-image: domainmagictestenv
+image: localhost:5000/domainmagictestenv
 
 
 stages:
