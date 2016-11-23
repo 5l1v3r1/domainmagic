@@ -101,6 +101,7 @@ class FileUpdater(object):
             update_url = self.filedict[local_path]['update_url']
             response = urlopen(update_url)
             content = response.read()
+            response.close()
             content_len = len(content)
             self.logger.debug(
                 "%s bytes downloaded from %s" %
@@ -117,9 +118,8 @@ class FileUpdater(object):
                 if update_url.lower().endswith('.gz'):  # TODO: we'd probably have to really parse the update url, this would fail with url arguments atm
                     content = zlib.decompress(content, zlib.MAX_WBITS | 16)
 
-            fd = os.fdopen(handle, 'w')
-            fd.write(content)
-            fd.close()
+            with os.fdopen(handle, 'w') as f:
+                f.write(content)
             try:
                 os.rename(tmpfilename, local_path)
             except OSError:

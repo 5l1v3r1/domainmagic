@@ -1,11 +1,12 @@
 # -*- coding: UTF-8 -*-
+from __future__ import print_function
 import threading
 from dns import resolver
 from dns.rdatatype import to_text as rdatatype_to_text
-
 from tasker import get_default_threadpool, TaskGroup, TimeOut
 import time
 import logging
+
 
 
 class DNSLookupResult(object):
@@ -25,7 +26,7 @@ class DNSLookupResult(object):
         return "<type='%s' content='%s' ttl='%s'>" % (self.rtype, self.content, self.ttl)
 
     def __unicode__(self):
-        return str(self.content)
+        return str(self.content).decode('utf-8')
 
 
 def _make_results(question, qtype, resolveranswer):
@@ -131,10 +132,10 @@ if __name__ == '__main__':
     # print "Sync lookup:"
     # print d.lookup_sync('wgwh.ch')
 
-    print "lookup start"
+    print("lookup start")
     start = time.time()
     result = d.lookup_multi(['wgwh.ch', 'heise.de', 'slashdot.org'])
     end = time.time()
     diff = end - start
-    print "lookup end, time=%.4f" % diff
-    print result
+    print("lookup end, time=%.4f" % diff)
+    print(result)

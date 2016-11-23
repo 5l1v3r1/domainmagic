@@ -1,12 +1,24 @@
-image: gryphius/centos6-with-git
+image: domainmagictestenv
+
+
+stages:
+  - test
+  - build
+
 
 unittests:
+  stage: test
   script:
-    - yum -q -y install python-setuptools python-nose pyOpenSSL
-    - easy_install -q pip
-    - pip install -q requests[security]
-    - pip install -q pygeoip dnspython
     - nosetests test
   only:
     - master
 
+
+# define RSYNC_TARGET in gitlab -> project domainmagic -> settings -> variables
+
+buildrpm:
+  stage: build
+  script:
+    - if [ -n "${RSYNC_TARGET}" ]; then python setup.py bdist_rpm > /dev/null && rsync -auz dist/domainmagic-*.noarch.rpm ${RSYNC_TARGET}; fi
+  only:
+    - master

@@ -6,6 +6,7 @@ import logging
 from tld import get_IANA_TLD_list
 from validators import REGEX_IPV4, REGEX_IPV6
 import traceback
+import io
 try:
     import urlparse
 except ImportError:
@@ -144,7 +145,8 @@ class URIExtractor(object):
         if not os.path.exists(filename):
             self.logger.error("File %s not found - skipping" % filename)
             return []
-        content = open(filename, 'r').read().lower()
+        with io.open(filename, 'r') as f:
+            content = f.read().lower()
         entries = content.split()
         del content
         return set(entries)
