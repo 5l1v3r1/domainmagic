@@ -39,6 +39,7 @@ class RBLProviderBase(object):
         self.logger = logging.getLogger('%s.rbllookup.%s' % (__package__, self.rbldomain))
         self.resolver = DNSLookup(timeout=timeout, lifetime=lifetime)
         self.descriptiontemplate = "${input} is listed on ${rbldomain} (${identifier})"
+        self.lifetime = lifetime
 
     def add_replycode(self, mask, identifier=None):
         """add a replycode/bitmask. identifier is any object which will be returned if a dns result matches this replycode
@@ -109,15 +110,21 @@ class RBLProviderBase(object):
                                                  lookup_to_trans[lookup],
                                                  ipresult.content))
         else:
+            loopstarttime = time.time()
             for transform in transforms:
                 lookup = self.make_lookup(transform)
-                arecordlist = self.resolver.lookup(lookup)
+                arecordlist = self.resolver.lookup(lookup.encode('utf-8', 'ignore'))
                 for ipresult in arecordlist:
                     listings.extend(
                         self._listed_identifiers(
                             input,
                             transform,
                             ipresult.content))
+                
+                runtime = time.time() - loopstarttime
+                if runtime > self.lifetime:
+                    self.logger.debug('rbl lookup aborted due to timeout after %ss' % runtime)
+                    break
 
         return listings
 
