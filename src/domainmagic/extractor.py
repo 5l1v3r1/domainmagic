@@ -25,15 +25,16 @@ def build_search_re(tldlist=None):
     # - > for links in tags
     # - ) after closing parentheses (seen in chinese spam)
     # - * seen in spam
+    # - - seen in spam
     reg = r"(?:(?<=^)|(?<="
-    reg += r"(?:\s|[\"\>\)\*])"
-    reg += "))"
+    reg += r"(?:\s|[\"\>\)\*-])"
+    reg += r"))"
 
     # url starts here
     reg += r"(?:"
     reg += r"(?:https?://|ftp://)"  # protocol
     reg += r"(?:[a-z0-9!%_$]+(?::[a-z0-9!%_$]+)?@)?"  # username/pw
-    reg += ")?"
+    reg += r")?"
 
     # domain
     reg += r"(?:"  # domain types
@@ -42,12 +43,12 @@ def build_search_re(tldlist=None):
     allowed_hostname_chars = r"-a-z0-9_"
     reg += r"[a-z0-9_]"  # first char can't be a hyphen
     reg += r"[" + allowed_hostname_chars + \
-        "]*"  # there are domains with only one character, like 'x.org'
+        r"]*"  # there are domains with only one character, like 'x.org'
     reg += r"(?:\.[" + allowed_hostname_chars + \
-        "]+)*"  # more hostname parts separated by dot
-    reg += "\."  # dot between hostname and tld
+        r"]+)*"  # more hostname parts separated by dot
+    reg += r"\."  # dot between hostname and tld
     reg += r"(?:"  # tldgroup
-    reg += "|".join([x.replace('.', '\.') for x in tldlist])
+    reg += r"|".join([x.replace('.', '\.') for x in tldlist])
     reg += r")\.?"  # standard domain can end with a dot
 
     # dotquad
@@ -67,13 +68,13 @@ def build_search_re(tldlist=None):
 
     # path
     allowed_path_chars = r"-a-z0-9._/%#\[\]~"
-    reg += "(?:\/[" + allowed_path_chars + "]+)*"
+    reg += r"(?:\/[" + allowed_path_chars + r"]+)*"
 
     # request params
     allowed_param_chars = r"-a-z0-9;._/\[\]?#+%&=@"
     reg += r"(?:\/?)"  # end domain with optional  slash
-    reg += "(?:\?[" + allowed_param_chars + \
-        "]*)?"  # params must follow after a question mark
+    reg += r"(?:\?[" + allowed_param_chars + \
+        r"]*)?"  # params must follow after a question mark
 
     # print "RE: %s"%reg
     return re.compile(reg, re.IGNORECASE)
@@ -91,7 +92,7 @@ def build_email_re(tldlist=None):
     reg += r"\@"
     reg += r"[-a-z0-9._]+\."  # hostname
     reg += r"(?:"  # tldgroup
-    reg += "|".join([x.replace('.', '\.') for x in tldlist])
+    reg += r"|".join([x.replace('.', '\.') for x in tldlist])
     reg += r")"
     reg += r")(?!(?:[a-z0-9-]|\.[a-z0-9]))"          # make sure domain ends here
     return re.compile(reg, re.IGNORECASE)
