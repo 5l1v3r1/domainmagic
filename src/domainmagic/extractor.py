@@ -67,11 +67,11 @@ def build_search_re(tldlist=None):
     reg += r"""(?=["'/?]|\s|$)"""
 
     # path
-    allowed_path_chars = r"-a-z0-9._/%#\[\]~"
+    allowed_path_chars = r"-a-z0-9._/%#\[\]~*"
     reg += r"(?:\/[" + allowed_path_chars + r"]+)*"
 
     # request params
-    allowed_param_chars = r"-a-z0-9;._/\[\]?#+%&=@"
+    allowed_param_chars = r"-a-z0-9;._/\[\]?#+%&=@*"
     reg += r"(?:\/?)"  # end domain with optional  slash
     reg += r"(?:\?[" + allowed_param_chars + \
         r"]*)?"  # params must follow after a question mark
