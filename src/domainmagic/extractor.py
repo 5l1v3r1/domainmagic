@@ -11,6 +11,12 @@ try:
     import urlparse
 except ImportError:
     from urllib import parse as urlparse
+    
+    
+EMAIL_HACKS = {
+    '@' : ['(at)', ' (at) ', ' AT ', '[at]'],
+    '.' : ['(dot)', ' (dot) ', ' DOT ', ['[dot]']],
+}
 
 
 def build_search_re(tldlist=None):
@@ -195,7 +201,7 @@ class URIExtractor(object):
                 finaluris.append(uri)
         return sorted(set(finaluris))
 
-    def extractemails(self, plaintext):
+    def extractemails(self, plaintext, use_hacks=False):
         if time.time() - self.lastreloademail > self.maxregexage:
             self.lastreloademail = time.time()
             self.logger.debug("Rebuilding search regex with latest TLDs")
@@ -205,7 +211,12 @@ class URIExtractor(object):
                 self.logger.error(
                     "Rebuilding email search re failed: %s" %
                     traceback.format_exc())
-
+        
+        if use_hacks:
+            for key in EMAIL_HACKS:
+                for value in EMAIL_HACKS[key]:
+                    plaintext = plaintext.replace(value, key)
+        
         emails = []
         emails.extend(re.findall(self.emailre, plaintext))
         return sorted(set(emails))
