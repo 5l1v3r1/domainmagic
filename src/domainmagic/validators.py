@@ -47,12 +47,23 @@ def is_ip(content):
     return is_ipv4(content) or is_ipv6(content)
 
 
-def is_hostname(content, check_valid_tld=False):
+def is_hostname(content, check_valid_tld=False, check_resolvable=False):
     if not _apply_rgx(REGEX_HOSTNAME, content):
         return False
 
     if check_valid_tld:
         from domainmagic.tld import get_default_tldmagic
-        return get_default_tldmagic().get_tld(content) is not None
+        if get_default_tldmagic().get_tld(content) is None:
+            return False
+    
+    if check_resolvable:
+        from domainmagic.dnslookup import DNSLookup
+        dns = DNSLookup()
+        for qtype in ['A', 'MX', 'NS']:
+            result = dns.lookup(content, qtype)
+            if len(result)>0:
+                break
+        else:
+            return False
 
     return True
