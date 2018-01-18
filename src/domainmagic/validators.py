@@ -60,7 +60,7 @@ def is_hostname(content, check_valid_tld=False, check_resolvable=False):
     if check_resolvable:
         from domainmagic.dnslookup import DNSLookup
         dns = DNSLookup()
-        for qtype in ['A', 'MX', 'NS']:
+        for qtype in ['A', 'AAAA', 'MX', 'NS']:
             result = dns.lookup(content, qtype)
             if len(result)>0:
                 break
