@@ -124,6 +124,18 @@ def fqdn_from_uri(uri):
     return fqdn
 
 
+def redirect_from_google(uri):
+    """extract target domain from google redirects"""
+    parsed = urlparse.urlparse(uri)
+    if 'google.' in parsed.netloc and parsed.path == '/url':
+        values = urlparse.parse_qs(parsed.query)
+        if 'q' in values:
+            uris = values['q']
+            if len(uris) > 0:
+                uri = uris[0]
+    return uri
+
+
 class URIExtractor(object):
 
     """Extract URIs"""
@@ -159,7 +171,7 @@ class URIExtractor(object):
         del content
         return set(entries)
 
-    def extracturis(self, plaintext):
+    def extracturis(self, plaintext, use_hacks=False):
         if self.tldlist is None and time.time() - self.lastreload > self.maxregexage:
             self.lastreload = time.time()
             self.logger.debug("Rebuilding search regex with latest TLDs")
@@ -197,6 +209,9 @@ class URIExtractor(object):
             # axb: trailing dots are probably not part of the uri
             if uri.endswith('.'):
                 uri = uri[:-1]
+                
+            if use_hacks:
+                uri = redirect_from_google(uri)
 
             if not skip:
                 finaluris.append(uri)
