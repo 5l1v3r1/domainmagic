@@ -3,8 +3,8 @@ import re
 import os
 import time
 import logging
-from tld import get_IANA_TLD_list
-from validators import REGEX_IPV4, REGEX_IPV6
+from domainmagic.tld import get_IANA_TLD_list
+from domainmagic.validators import REGEX_IPV4, REGEX_IPV6
 import traceback
 import io
 try:

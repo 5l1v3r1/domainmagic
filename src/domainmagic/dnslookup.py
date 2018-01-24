@@ -3,7 +3,7 @@ from __future__ import print_function
 import threading
 from dns import resolver
 from dns.rdatatype import to_text as rdatatype_to_text
-from tasker import get_default_threadpool, TaskGroup, TimeOut
+from domainmagic.tasker import get_default_threadpool, TaskGroup, TimeOut
 import time
 import logging
 

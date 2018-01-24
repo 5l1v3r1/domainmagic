@@ -1,9 +1,9 @@
 # -*- coding: UTF-8 -*-
 from __future__ import print_function
-from util import dict_update, dict_path, list_to_dict
-import re
-from fileupdate import updatefile
+from domainmagic.util import dict_update, dict_path, list_to_dict
+from domainmagic.fileupdate import updatefile
 import io
+import re
 
 
 @updatefile('/tmp/tlds-alpha-by-domain.txt', 'http://data.iana.org/TLD/tlds-alpha-by-domain.txt', minimum_size=1000, refresh_time=86400, force_recent=True)

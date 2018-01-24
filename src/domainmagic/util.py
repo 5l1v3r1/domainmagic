@@ -3,7 +3,7 @@ import collections
 
 
 def dict_path(l, node, path=None):
-    """walk list l through dict l and return a list of all nodes found up until a leaf node"""
+    """walk list l through dict node and return a list of all nodes found up until a leaf node"""
     if path is None:
         path = []
 

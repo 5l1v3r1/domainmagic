@@ -1,11 +1,11 @@
 # -*- coding: UTF-8 -*-
 from __future__ import print_function
-from tasker import TaskGroup, get_default_threadpool
-from tld import get_default_tldmagic
+from domainmagic.tasker import TaskGroup, get_default_threadpool
+from domainmagic.tld import get_default_tldmagic
+from domainmagic.dnslookup import DNSLookup
+from domainmagic.ip import ip_reversed
+from domainmagic.validators import is_ip, is_hostname
 import logging
-from dnslookup import DNSLookup
-from ip import ip_reversed
-from validators import is_ip, is_hostname
 import re
 from string import Template
 import os
