@@ -129,10 +129,10 @@ def redirect_from_google(uri):
     parsed = urlparse.urlparse(uri)
     if 'google.' in parsed.netloc and parsed.path == '/url':
         values = urlparse.parse_qs(parsed.query)
-        if 'q' in values:
-            uris = values['q']
+        for key in ['q', 'url']:
+            uris = values.get(key, [])
             if len(uris) > 0:
-                uri = uris[0]
+                uri = uris[0] # we expect exactly one redirect
     return uri
 
 
