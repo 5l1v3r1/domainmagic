@@ -13,9 +13,10 @@ REGEX_IPV6 = """(?:(?:[0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4
 
 REGEX_CIDRV6 = REGEX_IPV6 + """\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9])"""
 
-REGEX_HOSTNAME = """^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])(\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9]))*$"""
+# read doc and explanations in is_hostname
+REGEX_HOSTNAME = """([_a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])(\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9]))*"""
 
-REGEX_EMAIL_LHS = """^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*$"""
+REGEX_EMAIL_LHS = """[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*"""
 
 
 def _apply_rgx(rgx, content):
@@ -49,7 +50,23 @@ def is_ip(content):
 
 
 def is_hostname(content, check_valid_tld=False, check_resolvable=False):
-    if not _apply_rgx(REGEX_HOSTNAME, content):
+    """
+    Returns True if content is a valid hostname (but not necessarily a FQDN)
+    
+    a hostname label may start with underscore but cannot have an underscore at a later position
+    a hostname label may contain dashes but not as first or last character
+    a hostname label may only contain latin letters a-z and decimal numbers
+    a hostname label must not exceed 63 characters
+    a hostname should not exceed 255 characters (not covered by regex)
+    more complex rules apply to FQDNs which are not covered by regex
+    IDN is not covered by regex. convert to punycode first: u'idn-höstnäme.com'.encode('idna')
+    
+    :param content: the hostname to check
+    :param check_valid_tld: set to True to only accept FQDNs with valid IANA approved TLD
+    :param check_resolvable: set to True to only accept hostnames which can be resolved by DNS
+    :return: True if valid hostname, False otherwise
+    """
+    if not _apply_rgx(REGEX_HOSTNAME, content) or len(content) > 255:
         return False
 
     if check_valid_tld:
@@ -70,16 +87,45 @@ def is_hostname(content, check_valid_tld=False, check_resolvable=False):
     return True
 
 
+def is_fqdn(content, check_valid_tld=False, check_resolvable=False):
+    """
+    Returns True if content is a valid FQDN
+    
+    Difference hostname vs FQDN:
+    a hostname consists of at least one valid label
+    a FQDN consist of at least two valid labels, thus contains a .
+    
+    :param content: the FQDN to check
+    :param check_valid_tld: set to True to only accept FQDNs with valid IANA approved TLD
+    :param check_resolvable: set to True to only accept FQDNs which can be resolved by DNS
+    :return: True if valid FQDN, False otherwise
+    """
+    if not '.' in content.strip('.'):
+        return False
+        
+    if not is_hostname(content, check_valid_tld, check_resolvable):
+        return False
+    
+    return True
+
+
 def is_email(content, check_valid_tld=False, check_resolvable=False):
+    """
+    Returns True if content is a valid email address
+    :param content: the email address to check
+    :param check_valid_tld: set to True to only accept FQDNs with valid IANA approved TLD
+    :param check_resolvable: set to True to only accept FQDNs which can be resolved by DNS
+    :return: True if valid email address, False otherwise
+    """
     if not '@' in content:
         return False
     
     lhs, domain = content.split('@', 1)
     
-    if not is_hostname(domain, check_valid_tld, check_resolvable):
+    if not _apply_rgx(REGEX_EMAIL_LHS, lhs):
         return False
     
-    if not _apply_rgx(REGEX_EMAIL_LHS, lhs):
+    if not is_fqdn(domain, check_valid_tld, check_resolvable):
         return False
     
     return True
