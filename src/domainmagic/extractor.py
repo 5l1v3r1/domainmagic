@@ -106,7 +106,7 @@ def build_email_re(tldlist=None):
 
 
 def domain_from_uri(uri):
-    """backwards compatibilty name. this method is used in urihash/uriextract fuglu plugins"""
+    """backwards compatibilty name"""
     return fqdn_from_uri(uri)
 
 
@@ -150,16 +150,19 @@ class URIExtractor(object):
         self.emailre = build_email_re(self.tldlist)
         self.skiplist = []
         self.maxregexage = 86400  # rebuild search regex once a day so we get new tlds
-
+    
+    
     def set_tld_list(self, tldlist):
         """override the tldlist and rebuild the search regex"""
         self.tldlist = tldlist
         self.searchre = build_search_re(tldlist)
         self.emailre = build_email_re(tldlist)
-
+    
+    
     def load_skiplist(self, filename):
         self.skiplist = self._load_single_file(filename)
-
+    
+    
     def _load_single_file(self, filename):
         """return lowercased list of unique entries"""
         if not os.path.exists(filename):
@@ -170,7 +173,38 @@ class URIExtractor(object):
         entries = content.split()
         del content
         return set(entries)
-
+    
+    
+    def _uri_filter(self, uri, use_hacks):
+        skip = False
+        newuri = None
+        try:
+            domain = fqdn_from_uri(uri.lower())
+        except Exception:
+            skip = True
+            domain = None
+    
+        # work around extractor bugs - these could probably also be fixed in the search regex
+        # but for now it's easier to just throw them out
+        if not skip and domain and '..' in domain:  # two dots in domain
+            skip = True
+    
+        if not skip and use_hacks:
+            newuri = redirect_from_google(uri)
+    
+        skip = False
+        for skipentry in self.skiplist:
+            if domain == skip or domain.endswith(".%s" % skipentry):
+                skip = True
+                break
+    
+        # axb: trailing dots are probably not part of the uri
+        if uri.endswith('.'):
+            uri = uri[:-1]
+            
+        return skip, uri, newuri
+    
+    
     def extracturis(self, plaintext, use_hacks=False):
         if self.tldlist is None and time.time() - self.lastreload > self.maxregexage:
             self.lastreload = time.time()
@@ -186,37 +220,18 @@ class URIExtractor(object):
         uris.extend(re.findall(self.searchre, plaintext))
 
         finaluris = []
-        # check skiplist$
-        for uri in uris:
-            try:
-                domain = domain_from_uri(uri.lower())
-            except Exception as e:
-                # self.logger.warn("Extract domain from uri %s failed :
-                # %s"%(uri,str(e)))
-                continue
-
-            # work around extractor bugs - these could probably also be fixed in the search regex
-            # but for now it's easier to just throw them out
-            if '..' in domain:  # two dots in domain
-                continue
-
-            skip = False
-            for skipentry in self.skiplist:
-                if domain == skip or domain.endswith(".%s" % skipentry):
-                    skip = True
-                    break
-
-            # axb: trailing dots are probably not part of the uri
-            if uri.endswith('.'):
-                uri = uri[:-1]
-                
-            if use_hacks:
-                uri = redirect_from_google(uri)
-
-            if not skip:
-                finaluris.append(uri)
+        # check skiplist and apply recursive extraction hacks
+        for newuri in uris:
+            while newuri is not None:
+                skip, uri, newuri = self._uri_filter(newuri, use_hacks)
+                if newuri == uri:
+                    newuri = None
+                if not skip:
+                    finaluris.append(uri)
+            
         return sorted(set(finaluris))
-
+    
+    
     def extractemails(self, plaintext, use_hacks=False):
         if time.time() - self.lastreloademail > self.maxregexage:
             self.lastreloademail = time.time()
@@ -236,6 +251,7 @@ class URIExtractor(object):
         emails = []
         emails.extend(re.findall(self.emailre, plaintext))
         return sorted(set(emails))
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
