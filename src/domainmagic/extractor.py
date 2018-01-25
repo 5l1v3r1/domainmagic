@@ -15,7 +15,7 @@ except ImportError:
     
 EMAIL_HACKS = {
     '@' : ['(at)', ' (at) ', ' AT ', '[at]'],
-    '.' : ['(dot)', ' (dot) ', ' DOT ', ['[dot]']],
+    '.' : ['(dot)', ' (dot) ', ' DOT ', '[dot]'],
 }
 
 
