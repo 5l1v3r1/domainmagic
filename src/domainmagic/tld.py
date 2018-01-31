@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from __future__ import print_function
-from domainmagic.util import dict_update, dict_path, list_to_dict
+from domainmagic.util import tld_tree_update, tld_list_to_tree, tld_tree_path
 from domainmagic.fileupdate import updatefile
 import io
 import re
@@ -65,10 +65,17 @@ class TLDMagic(object):
         fqdn = fqdn.lower()
         parts = fqdn.split('.')
         parts.reverse()
-        tldparts = dict_path(parts, self.tldtree)
-        if len(tldparts) == 0:
+        candidates = tld_tree_path(parts, self.tldtree)
+        if len(candidates) == 0:
             return None
-        tldparts.reverse()
+        candidates.reverse()
+        tldparts = []
+        leaf = False
+        for part in candidates:
+            if part[1]:
+                leaf = True
+            if leaf:
+                tldparts.append(part[0])
         tld = '.'.join(tldparts)
         return tld
 
@@ -101,11 +108,11 @@ class TLDMagic(object):
 
     def add_tld(self, tld):
         """add a new tld to the list"""
-        tld = tld.lower()
+        tld = tld.lower().strip('.')
         parts = tld.split('.')
         parts.reverse()
-        update = list_to_dict(parts)
-        self.tldtree = dict_update(self.tldtree, update)
+        update = tld_list_to_tree(parts)
+        self.tldtree = tld_tree_update(self.tldtree, update)
 
     def add_tlds_from_file(self, filename):
         for tld in load_tld_file(filename):

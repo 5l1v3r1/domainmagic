@@ -1,24 +1,75 @@
 # -*- coding: UTF-8 -*-
-import collections
 
+######################
+# new get_tld functions with support for subsubdomains
+######################
+
+def tld_tree_path(tldlist, tree, path=None):
+    """
+    walk list tldlist through tld tree and return a list of all tld candidates found in tree.
+    candidate list is a list of tuples
+        first tuple item contains the tld part,
+        second tuple item a boolean: True if this is a leaf, False if intermediate node
+    """
+    if path is None:
+        path = []
+    
+    if len(tldlist) == 0:  # list is finished
+        return path
+    
+    if tldlist[0] in tree:
+        node = tree[tldlist[0]]
+        path.append((tldlist[0], node[0]))
+        return tld_tree_path(tldlist[1:], node[1], path)
+    
+    return path
+
+
+def tld_tree_update(d, u):
+    """add tld tree u into tree d"""
+    for k, v in u.items():
+        kbranch = d.get(k, (False, {}))
+        leaf = v[0] or kbranch[0]
+        r = tld_tree_update(kbranch[1], v[1])
+        d[k] = (leaf, r)
+    return d
+
+
+def tld_list_to_tree(tldlist):
+    """translate a list into a tree path"""
+    d = {}
+    if len(tldlist) == 0:
+        return d
+    else:
+        is_leaf = len(tldlist)==1
+        d[tldlist[0]] = (is_leaf, tld_list_to_tree(tldlist[1:]))
+        return d
+
+
+
+#######################
+# old get_tld functions with subsubdomain detection issues
+#######################
+
+import collections
 
 def dict_path(l, node, path=None):
     """walk list l through dict node and return a list of all nodes found up until a leaf node"""
     if path is None:
         path = []
-
+    
     if len(l) == 0:  # list is finished
         return path
-
+    
     if not isinstance(node, collections.Mapping):  # leafnode
         if l[0] == node:
             path.append(node)
         return path
-
+    
     if l[0] in node:
         path.append(l[0])
         return dict_path(l[1:], node[l[0]], path)
-
+    
     return path
 
 

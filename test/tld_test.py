@@ -37,6 +37,20 @@ class UtilTest(unittest.TestCase):
         for fqdn,expectedtld in testdata:
             tld = tldmagic.get_tld(fqdn)
             self.assertEqual(tld,expectedtld, "Expected TLD %s from %s, but got %s"%(expectedtld,fqdn,tld))
+    
+    
+    def test_get_3tld_no_2tld(self):
+        tldmagic = TLDMagic(['com', 'three.ex.com'])
+        testdata=[
+            ('bla.com','com'),
+            ('ex.com','com'),
+            ('three.ex.com','three.ex.com'),
+            ('bla.three.ex.com','three.ex.com'),
+        ]
+        for fqdn,expectedtld in testdata:
+            tld = tldmagic.get_tld(fqdn)
+            self.assertEqual(tld,expectedtld, "Expected TLD %s from %s, but got %s"%(expectedtld,fqdn,tld))
+            
 
     def test_get_domain(self):
         tldmagic = TLDMagic(['com','co.uk','org.co.uk'])

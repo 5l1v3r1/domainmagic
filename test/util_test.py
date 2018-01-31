@@ -11,6 +11,24 @@ class UtilTest(unittest.TestCase):
 
     def tearDown(self):
         pass
+    
+    
+    def test_tld_list_to_tree(self):
+        self.assertEquals(tld_list_to_tree(['foo','bar','baz']),{'foo': (False, {'bar': (False, {'baz': (True, {})})})})
+    
+    def test_tld_tree_update(self):
+        d = {'foo': (True, {})}
+        u = {'foo': (False, {'bar': (False, {'baz': (True, {})})})}
+        exp = {'foo': (True, {'bar': (False, {'baz': (True, {})})})}
+        t = tld_tree_update(d, u)
+        self.assertEqual(t, exp)
+    
+    def test_tld_tree_path(self):
+        d = {'foo': (True, {'bar': (False, {'baz': (True, {})})})}
+        p = tld_tree_path(['foo', 'bar'], d)
+        self.assertEqual(p, [('foo', True), ('bar', False)])
+        p = tld_tree_path(['foo','bar','baz'], d)
+        self.assertEqual(p, [('foo', True), ('bar', False), ('baz', True)])
 
 
     def test_list_to_dict(self):
