@@ -1,6 +1,10 @@
 # -*- coding: UTF-8 -*-
 """Validators"""
 import re
+import sys
+
+if sys.version_info.major >= 3:
+    basestring = str
 
 
 REGEX_IPV4 = """(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"""
@@ -20,6 +24,8 @@ REGEX_EMAIL_LHS = """[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-
 
 
 def _apply_rgx(rgx, content):
+    if not isinstance(content, basestring):
+        return False
     return re.match("^%s$" % rgx, content) is not None
 
 
@@ -66,6 +72,9 @@ def is_hostname(content, check_valid_tld=False, check_resolvable=False):
     :param check_resolvable: set to True to only accept hostnames which can be resolved by DNS
     :return: True if valid hostname, False otherwise
     """
+    if not isinstance(content, basestring):
+        return False
+    
     if not _apply_rgx(REGEX_HOSTNAME, content) or len(content) > 255:
         return False
 
@@ -100,6 +109,9 @@ def is_fqdn(content, check_valid_tld=False, check_resolvable=False):
     :param check_resolvable: set to True to only accept FQDNs which can be resolved by DNS
     :return: True if valid FQDN, False otherwise
     """
+    if not isinstance(content, basestring):
+        return False
+    
     if not '.' in content.strip('.'):
         return False
         
@@ -117,6 +129,9 @@ def is_email(content, check_valid_tld=False, check_resolvable=False):
     :param check_resolvable: set to True to only accept FQDNs which can be resolved by DNS
     :return: True if valid email address, False otherwise
     """
+    if not isinstance(content, basestring):
+        return False
+    
     if not '@' in content:
         return False
     
