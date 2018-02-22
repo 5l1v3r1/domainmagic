@@ -388,7 +388,7 @@ class RBLLookup(object):
                     code, identifier = res.split(':', 1)
                     try:
                         code = int(code)
-                    except:
+                    except (ValueError, TypeError):
                         # fixed value
                         pass
                 else:

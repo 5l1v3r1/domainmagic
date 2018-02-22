@@ -13,7 +13,7 @@ def check_installation():
 
     try:
         from dns import resolver
-    except:
+    except ImportError:
         problems.append("dnspython is not installed")
 
     return problems
