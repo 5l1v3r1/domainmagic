@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 import time
-from threadpool import ThreadPool
+from domainmagic.threadpool import ThreadPool
 
 
 class Task(object):
