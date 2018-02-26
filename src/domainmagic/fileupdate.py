@@ -117,8 +117,8 @@ class FileUpdater(object):
             if self.filedict[local_path]['unpack']:
                 if update_url.lower().endswith('.gz'):  # TODO: we'd probably have to really parse the update url, this would fail with url arguments atm
                     content = zlib.decompress(content, zlib.MAX_WBITS | 16)
-
-            with os.fdopen(handle, 'w') as f:
+            
+            with os.fdopen(handle, 'wb') as f:
                 f.write(content)
             try:
                 os.rename(tmpfilename, local_path)
