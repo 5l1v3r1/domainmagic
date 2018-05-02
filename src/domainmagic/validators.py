@@ -18,7 +18,7 @@ REGEX_IPV6 = """(?:(?:[0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4
 REGEX_CIDRV6 = REGEX_IPV6 + """\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9])"""
 
 # read doc and explanations in is_hostname
-REGEX_HOSTNAME = """([_a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])(\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9]))*"""
+REGEX_HOSTNAME = """([_a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9]?)(\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9]))*"""
 
 REGEX_EMAIL_LHS = """[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*"""
 
@@ -62,6 +62,7 @@ def is_hostname(content, check_valid_tld=False, check_resolvable=False):
     a hostname label may start with underscore but cannot have an underscore at a later position
     a hostname label may contain dashes but not as first or last character
     a hostname label may only contain latin letters a-z and decimal numbers
+    a hostname label must contain at least one character
     a hostname label must not exceed 63 characters
     a hostname should not exceed 255 characters (not covered by regex)
     more complex rules apply to FQDNs which are not covered by regex
