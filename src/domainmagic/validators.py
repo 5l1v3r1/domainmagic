@@ -136,7 +136,7 @@ def is_email(content, check_valid_tld=False, check_resolvable=False):
     if not '@' in content:
         return False
     
-    lhs, domain = content.split('@', 1)
+    lhs, domain = content.rsplit('@', 1)
     
     if not _apply_rgx(REGEX_EMAIL_LHS, lhs):
         return False
