@@ -29,12 +29,13 @@ def build_search_re(tldlist=None):
     # - whitespace
     # - " for href
     # - ' for borked href
+    # - = borked href without " or '
     # - > for links in tags
     # - ) after closing parentheses (seen in chinese spam)
     # - * seen in spam
     # - - seen in spam
     reg = r"(?:(?<=^)|(?<="
-    reg += r"(?:\s|[\"'\>\)\*-])"
+    reg += r"(?:\s|[\"'=\>\)\*-])"
     reg += r"))"
 
     # url starts here
