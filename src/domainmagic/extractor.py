@@ -70,9 +70,10 @@ def build_search_re(tldlist=None):
     # optional port
     reg += r"(?:\:\d{1,5})?"
 
-    # after the domain, there must be a path sep or quotes space or ? end,
+    # after the domain, there must be a path sep or quotes space or ?
+    # or > (for borked href without " or ') end,
     # check with lookahead
-    reg += r"""(?=["'/?]|\s|$)"""
+    reg += r"""(?=[>"'/?]|\s|$)"""
 
     # path
     allowed_path_chars = r"-a-z0-9._/%#\[\]~*"
@@ -262,5 +263,11 @@ if __name__ == '__main__':
 
     # logging.info(extractor.extractemails("blah a@b.com someguy@gmail.com"))
 
-    txt = """hello http://bla.com please click on <a href="www.co.uk">slashdot.org/?a=c&f=m</a> www.skipme.com www.skipmenot.com/ x.co/4to2S http://allinsurancematters.net/lurchwont/ muahahaha x.org"""
+    txt = """
+    hello 
+    http://bla.com 
+    please click on <a href="www.co.uk">slashdot.org/?a=c&f=m</a> 
+    or on <a href=www.withoutquotes.co.uk>slashdot.withoutquotes.org/?a=c&f=m</a>   
+    www.skipme.com www.skipmenot.com/ x.co/4to2S http://allinsurancematters.net/lurchwont/ muahahaha x.org
+    """
     logging.info(extractor.extracturis(txt))
